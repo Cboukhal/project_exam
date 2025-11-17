@@ -1,5 +1,21 @@
-24/10/2025 01:52:40 : SQLSTATE[HY000] [1049] Base 'decramp_db' inconnue
-24/10/2025 01:54:10 : SQLSTATE[HY000] [1049] Base 'decramp_db' inconnue
-24/10/2025 01:54:13 : SQLSTATE[HY000] [1049] Base 'decramp_db' inconnue
+24/10/2025 01:52:40 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
+24/10/2025 01:54:10 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
+24/10/2025 01:54:13 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
 24/10/2025 01:56:06 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de ''role' VARCHAR(20),
             date_création DATETIME DEFAULT CURRENT_TIMESTA' à la ligne 8
+17/11/2025 09:49:59 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '-exam CHARACTER SET utf8 COLLATE utf8_bin' à la ligne 1
+17/11/2025 09:49:59 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
+17/11/2025 09:50:33 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '-exam CHARACTER SET utf8 COLLATE utf8_bin' à la ligne 1
+17/11/2025 09:50:33 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
+17/11/2025 09:54:18 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '-exam CHARACTER SET utf8 COLLATE utf8_bin' à la ligne 1
+17/11/2025 09:54:18 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
+17/11/2025 09:54:20 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '-exam CHARACTER SET utf8 COLLATE utf8_bin' à la ligne 1
+17/11/2025 09:54:20 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
+17/11/2025 09:58:30 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '-exam CHARACTER SET utf8 COLLATE utf8_bin' à la ligne 1
+17/11/2025 09:58:30 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
+17/11/2025 10:00:12 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '-exam CHARACTER SET utf8 COLLATE utf8_bin' à la ligne 1
+17/11/2025 10:00:12 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
+17/11/2025 10:00:14 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '-exam CHARACTER SET utf8 COLLATE utf8_bin' à la ligne 1
+17/11/2025 10:00:14 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue
+17/11/2025 10:00:15 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '-exam CHARACTER SET utf8 COLLATE utf8_bin' à la ligne 1
+17/11/2025 10:00:15 : SQLSTATE[HY000] [1049] Base 'projet-exam' inconnue

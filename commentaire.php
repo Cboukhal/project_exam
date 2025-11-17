@@ -210,41 +210,6 @@
             <div class="alert alert-error"><?= $flash_error ?></div>
         <?php endif; ?>
 
-        <!-- SECTION FORMULAIRE -->
-        <section class="contact">
-            <h2>Laissez votre avis</h2>
-            <div class="contact-wrapper">
-                <div class="contact-form">
-                    <form id="commentForm" action="./commentaire.php" method="post">
-                        <label for="nom">Nom (optionnel) :</label>
-                        <input type="text" id="nom" name="nom" placeholder="Votre nom (ou restez anonyme)">
-                        
-                        <label for="email">Email <span style="color:red;">*</span> :</label>
-                        <input type="email" id="email" name="email" required placeholder="votre@email.com">
-                        
-                        <label for="note">Note <span style="color:red;">*</span> :</label>
-                        <div class="stars-container">
-                            <div class="stars" id="starRating">
-                                <span class="star" data-rating="1">★</span>
-                                <span class="star" data-rating="2">★</span>
-                                <span class="star" data-rating="3">★</span>
-                                <span class="star" data-rating="4">★</span>
-                                <span class="star" data-rating="5">★</span>
-                            </div>
-                            <span class="rating-text" id="ratingText">Choisissez une note</span>
-                        </div>
-                        <input type="hidden" id="note-value" name="note" value="0" required>
-                        <span class="error-message" id="errorMessage">Veuillez sélectionner une note</span>
-                        
-                        <label for="commentaire">Commentaire <span style="color:red;">*</span> :</label>
-                        <textarea id="commentaire" name="commentaire" required placeholder="Partagez votre expérience..." rows="5"></textarea>
-                        
-                        <button type="submit" name="envoyer_commentaire" value="1" class="btn">Envoyer mon avis</button>
-                    </form>
-                </div>
-            </div>
-        </section>
-
         <!-- SECTION TÉMOIGNAGES -->
         <section class="prestations">
             <h2>Derniers témoignages</h2>

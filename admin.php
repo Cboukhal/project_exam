@@ -8,7 +8,7 @@
     }
 
     // -----------------------------------Admin-----------------------------------//
-    $stmt = $connexion->prepare("SELECT prenom, nom FROM admins WHERE role = 'admin'");
+    $stmt = $connexion->prepare("SELECT prenom, nom FROM users WHERE role = 'admin'");
     $stmt->execute();
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 

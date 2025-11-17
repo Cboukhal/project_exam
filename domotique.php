@@ -33,15 +33,15 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
     
     <main>
         <!-- HERO SECTION -->
-        <section class="hero" aria-label="Bannière domotique">
+        <section class="hero" aria-label="Bannière d'accueil">
             <div id="slider" role="region" aria-label="Carrousel d'images">
-                <img src="./asset/image/ampoule.jpg" alt="Système domotique intelligent pour maison connectée">
-                <img src="./asset/image/ampoule2.jpg" alt="Contrôle domotique centralisé">
-                <img src="./asset/image/ampoule3.jpg" alt="Automatisation résidentielle moderne">
+                <img src="./asset/image/ampoule.jpg" alt="Installation électrique moderne avec ampoule LED">
+                <img src="./asset/image/ampoule2.jpg" alt="Tableau électrique professionnel">
+                <img src="./asset/image/ampoule3.jpg" alt="Système domotique intelligent">
             </div>
 
             <div class="hero-overlay">
-                <h1>Domotique</h1>
+                <h1>Accueil</h1>
                 <p class="hero-subtitle"><?php echo SITE_TITLE; ?> - Artisan électricien</p>
                 <p>Électricien depuis plus de 15 ans, spécialisé dans les nouvelles technologies et respectueux des normes.</p>
                 <a href="contact.php" class="btn" aria-label="Accéder à la page contact">Nous contacter</a>
@@ -49,9 +49,9 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
 
             <!-- Navigation du carrousel -->
             <div class="hero-dots" role="navigation" aria-label="Navigation du carrousel">
-                <button class="dot active" data-index="0" aria-label="Image 1" aria-current="true"></button>
-                <button class="dot" data-index="1" aria-label="Image 2"></button>
-                <button class="dot" data-index="2" aria-label="Image 3"></button>
+                <span class="dot active" data-index="0" aria-label="Image 1" aria-current="true"></span>
+                <span class="dot" data-index="1" aria-label="Image 2"></span>
+                <span class="dot" data-index="2" aria-label="Image 3"></span>
             </div>
         </section>
 

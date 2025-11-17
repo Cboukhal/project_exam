@@ -12,7 +12,7 @@
     try{
         $connexion = new PDO("mysql:host=$server;", $username, $password);
         $connexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $sql = "CREATE DATABASE IF NOT EXISTS decramp_db CHARACTER SET utf8 COLLATE utf8_bin";
+        $sql = "CREATE DATABASE IF NOT EXISTS projet-exam CHARACTER SET utf8 COLLATE utf8_bin";
         $connexion->exec($sql);
     }
     catch(PDOException $e){
@@ -23,13 +23,13 @@
         fclose($fichier);
     }
     //nom de la base de donnée
-    $dbname = 'decramp_db';
+    $dbname = 'projet-exam';
     try{
         $connexion = new PDO("mysql:host=$server;dbname=$dbname", $username, $password);
         $connexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $connexion->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         //admins
-        $sql = "CREATE TABLE IF NOT EXISTS admins(
+        $sql = "CREATE TABLE IF NOT EXISTS users(
             id INT AUTO_INCREMENT PRIMARY KEY,
             civilite VARCHAR(3),
             prenom VARCHAR(50) NOT NULL,
