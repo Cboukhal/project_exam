@@ -185,21 +185,6 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
             </article>
         </section>
 
-        <!-- SECTION AVANTAGES -->
-        <section class="presentation">
-            <h2>Les avantages de la domotique</h2>
-            <div class="section-content">
-                <ul class="avantages-list">
-                    <li><strong>Confort maximum :</strong> Automatisation des tâches répétitives et contrôle simplifié</li>
-                    <li><strong>Économies substantielles :</strong> Réduction de 20 à 30% de votre consommation énergétique</li>
-                    <li><strong>Sécurité renforcée :</strong> Surveillance en temps réel et simulation de présence</li>
-                    <li><strong>Accessibilité totale :</strong> Contrôle à distance depuis n'importe où</li>
-                    <li><strong>Évolutivité :</strong> Système modulaire facilement adaptable dans le temps</li>
-                    <li><strong>Valorisation :</strong> Augmentation de la valeur de votre bien immobilier</li>
-                </ul>
-            </div>
-        </section>
-
     </main>
 
     <?php include "./includes/footer.php"; ?>
