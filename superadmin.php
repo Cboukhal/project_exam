@@ -72,7 +72,7 @@
         }
         else
         {
-                echo "<h1>Admin non trouvé</h1>";
+                echo "<h1>Super_Admin non trouvé</h1>";
         }
     ?>
     <!------------------------------------ SERVICE ---------------------------------->

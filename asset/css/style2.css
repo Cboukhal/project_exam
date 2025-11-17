@@ -709,7 +709,7 @@ nav ul li a:hover {
 }
 
 /*-------------------------- Responsive --------------------------*/
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 1200px) {
   /* Afficher le burger sur mobile */
   .burger {
     display: block;

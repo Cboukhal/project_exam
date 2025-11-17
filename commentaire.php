@@ -83,92 +83,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="icon" type="image/favicon" href="./asset/image/OIP.webp">
     <title>Commentaires - Thierry Decramp</title>
-    <style>
-        .alert {
-            padding: 15px;
-            margin: 20px auto;
-            border-radius: 5px;
-            max-width: 800px;
-            text-align: center;
-        }
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .stars-container {
-            margin: 15px 0;
-        }
-        .stars {
-            font-size: 40px;
-            cursor: pointer;
-            user-select: none;
-        }
-        .star {
-            color: #ddd;
-            transition: color 0.2s;
-        }
-        .star:hover,
-        .star.active {
-            color: gold;
-        }
-        .rating-text {
-            display: block;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #666;
-        }
-        .error-message {
-            display: none;
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-        .error-message.show {
-            display: block;
-        }
-        .temoignage-card {
-            background: #f8f9fa;
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .temoignage-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .temoignage-stars {
-            font-size: 20px;
-            color: gold;
-        }
-        .temoignage-date {
-            color: #666;
-            font-size: 14px;
-        }
-        .temoignage-author {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .temoignage-content {
-            color: #555;
-            line-height: 1.6;
-        }
-        .no-comments {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-            font-style: italic;
-        }
-    </style>
 </head>
 <body>
     <?php include "./includes/header.php"; ?>
@@ -247,7 +161,7 @@
     
     <script src="./asset/Js/jquery-3.7.1.min.js"></script>
     <script src="./asset/Js/script.js"></script>
-    <script>
+    <!-- <script>
         // Gestion des étoiles
         document.addEventListener('DOMContentLoaded', function() {
             const stars = document.querySelectorAll('.star');
@@ -317,6 +231,6 @@
                 }
             });
         });
-    </script>
+    </script> -->
 </body>
 </html>
