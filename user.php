@@ -41,7 +41,6 @@ if (!empty($_POST["modifier_profil"])) {
     $nom = trim(strip_tags($_POST["nom"]));
     $email = trim(strtolower($_POST["email"]));
     
-    // Validation
     if (strlen($prenom) < 2 || strlen($prenom) > 50) {
         $_SESSION['flash_error'] = "Le prénom doit contenir entre 2 et 50 caractères.";
     }
@@ -52,7 +51,6 @@ if (!empty($_POST["modifier_profil"])) {
         $_SESSION['flash_error'] = "L'adresse email n'est pas valide.";
     }
     else {
-        // Vérifier si l'email est déjà utilisé par un autre utilisateur
         try {
             $sql = "SELECT id FROM users WHERE mail = :email AND id != :user_id";
             $stmt = $connexion->prepare($sql);
@@ -63,7 +61,6 @@ if (!empty($_POST["modifier_profil"])) {
             if ($stmt->fetch()) {
                 $_SESSION['flash_error'] = "Cette adresse email est déjà utilisée.";
             } else {
-                // Mettre à jour le profil
                 $sql = "UPDATE users SET civilite = :civilite, prenom = :prenom, nom = :nom, mail = :email WHERE id = :user_id";
                 $stmt = $connexion->prepare($sql);
                 $stmt->bindValue(":civilite", $civilite);
@@ -74,8 +71,10 @@ if (!empty($_POST["modifier_profil"])) {
                 $stmt->execute();
                 
                 $_SESSION['flash_success'] = "Profil modifié avec succès !";
+                $_SESSION['prenom'] = $prenom;
+                $_SESSION['nom'] = $nom;
+                $_SESSION['email'] = $email;
                 
-                // Recharger les données
                 $user['civilite'] = $civilite;
                 $user['prenom'] = $prenom;
                 $user['nom'] = $nom;
@@ -97,7 +96,6 @@ if (!empty($_POST["changer_mdp"])) {
     $nouveau_mdp = $_POST["nouveau_mdp"];
     $confirmer_mdp = $_POST["confirmer_mdp"];
     
-    // Validation
     if (!password_verify($ancien_mdp, $user['mdp'])) {
         $_SESSION['flash_error'] = "L'ancien mot de passe est incorrect.";
     }
@@ -156,7 +154,38 @@ if (!empty($_POST["envoyer_commentaire"])) {
         }
     }
     
-    header("Location: ./user.php#commentaires");
+    header("Location: ./user.php#nouveau-avis");
+    exit;
+}
+
+// ========== TRAITEMENT SUPPRESSION COMPTE ==========
+if (!empty($_POST["supprimer_compte"])) {
+    $confirmation = $_POST["confirmation"] ?? '';
+    
+    if ($confirmation === 'SUPPRIMER') {
+        try {
+            // Supprimer les données associées (optionnel)
+            $connexion->prepare("DELETE FROM commentaire WHERE email = ?")->execute([$user['mail']]);
+            $connexion->prepare("DELETE FROM contact WHERE email = ?")->execute([$user['mail']]);
+            
+            // Supprimer le compte
+            $stmt = $connexion->prepare("DELETE FROM users WHERE id = ?");
+            $stmt->execute([$user_id]);
+            
+            // Détruire la session
+            session_destroy();
+            
+            header("Location: ./index.php");
+            exit;
+        } catch(PDOException $e) {
+            error_log("Erreur suppression compte : " . $e->getMessage());
+            $_SESSION['flash_error'] = "Erreur lors de la suppression du compte.";
+        }
+    } else {
+        $_SESSION['flash_error'] = "Confirmation incorrecte. Tapez 'SUPPRIMER' pour confirmer.";
+    }
+    
+    header("Location: ./user.php#profil");
     exit;
 }
 
@@ -166,13 +195,12 @@ $flash_error = $_SESSION['flash_error'] ?? '';
 unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
 // ========== RÉCUPÉRATION HISTORIQUE ==========
-// Historique des contacts
 try {
     $sql = "SELECT id, sujet, message, status, DATE_FORMAT(date_creation, '%d/%m/%Y à %H:%i') as date_fr 
             FROM contact 
             WHERE email = :email 
             ORDER BY date_creation DESC 
-            LIMIT 10";
+            LIMIT 20";
     $stmt = $connexion->prepare($sql);
     $stmt->bindValue(":email", $user['mail']);
     $stmt->execute();
@@ -182,13 +210,12 @@ try {
     $historique_contacts = [];
 }
 
-// Historique des demandes de devis
 try {
     $sql = "SELECT id, Professionnels_Particuliers, message, status, DATE_FORMAT(date_creation, '%d/%m/%Y à %H:%i') as date_fr 
             FROM requete_devis 
             WHERE email = :email 
             ORDER BY date_creation DESC 
-            LIMIT 10";
+            LIMIT 20";
     $stmt = $connexion->prepare($sql);
     $stmt->bindValue(":email", $user['mail']);
     $stmt->execute();
@@ -198,13 +225,12 @@ try {
     $historique_devis = [];
 }
 
-// Mes commentaires
 try {
     $sql = "SELECT id, note, commentaire, approved, DATE_FORMAT(date_creation, '%d/%m/%Y à %H:%i') as date_fr 
             FROM commentaire 
             WHERE email = :email 
             ORDER BY date_creation DESC 
-            LIMIT 10";
+            LIMIT 20";
     $stmt = $connexion->prepare($sql);
     $stmt->bindValue(":email", $user['mail']);
     $stmt->execute();
@@ -213,35 +239,65 @@ try {
     error_log("Erreur récupération commentaires : " . $e->getMessage());
     $mes_commentaires = [];
 }
+
+// Statistiques utilisateur
+$stats = [
+    'total_contacts' => count($historique_contacts),
+    'total_devis' => count($historique_devis),
+    'total_commentaires' => count($mes_commentaires),
+    'commentaires_publies' => count(array_filter($mes_commentaires, fn($c) => $c['approved'] == 1)),
+];
 ?>
-<!------------------------------------------------------------------------------>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="keywords" content="">
-    <meta name="author" content="">
+    <meta name="description" content="Espace utilisateur - Gérez votre profil, consultez votre historique et laissez des avis.">
+    <meta name="keywords" content="espace client, profil utilisateur, historique">
+    <meta name="author" content="SECIC - Thierry Decramp">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles principaux -->
     <link rel="stylesheet" href="./asset/css/style2.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/favicon" href="./asset/image/OIP.webp">
-    <title>Mon espace</title>
+    <!-- Styles user -->
+    <link rel="stylesheet" href="./asset/css/user.css">
+    
+    <link rel="icon" type="image/webp" href="./asset/image/OIP.webp">
+    
+    <title>Mon espace - <?php echo SITE_TITLE; ?></title>
 </head>
 <body>
-    <?php
-        include "./includes/header.php";
-    ?>
+    <?php include "./includes/header.php"; ?>
+    
     <main>
-    <div class="user-dashboard">
-            <!-- Section de bienvenue -->
-            <div class="welcome-section">
-                <h1>👋 Bonjour <?php echo htmlspecialchars($user['prenom']); ?> !</h1>
-                <p>Bienvenue dans votre espace personnel</p>
-                <p style="font-size: 0.9rem; opacity: 0.9;">
-                    Membre depuis le <?php echo date('d/m/Y', strtotime($user['date_creation'])); ?>
-                </p>
+        <div class="user-container">
+            <!-- Header utilisateur -->
+            <div class="user-header">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <?= strtoupper(substr($user['prenom'], 0, 1) . substr($user['nom'], 0, 1)) ?>
+                    </div>
+                    <div>
+                        <h1>Bonjour <?php echo htmlspecialchars($user['prenom']); ?> !</h1>
+                        <p>Bienvenue dans votre espace personnel</p>
+                        <p class="user-meta">
+                            Membre depuis le <?php echo date('d/m/Y', strtotime($user['date_creation'])); ?>
+                            <?php if (isset($user['role']) && $user['role'] === 'admin'): ?>
+                                <span class="badge-admin">👑 Admin</span>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <?php if (isset($user['role']) && $user['role'] === 'admin'): ?>
+                        <a href="./admin.php" class="btn btn-admin">Panneau admin</a>
+                    <?php endif; ?>
+                    <a href="./deconnexion.php" class="btn btn-logout">Déconnexion</a>
+                </div>
             </div>
 
             <!-- Messages flash -->
@@ -257,117 +313,169 @@ try {
                 </div>
             <?php endif; ?>
 
-            <!-- Onglets de navigation -->
+            <!-- Statistiques utilisateur -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📧</div>
+                    <div class="stat-info">
+                        <div class="stat-number"><?= $stats['total_contacts'] ?></div>
+                        <div class="stat-label">Messages envoyés</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📄</div>
+                    <div class="stat-info">
+                        <div class="stat-number"><?= $stats['total_devis'] ?></div>
+                        <div class="stat-label">Demandes de devis</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">💬</div>
+                    <div class="stat-info">
+                        <div class="stat-number">
+                            <?= $stats['total_commentaires'] ?>
+                            <small>(<?= $stats['commentaires_publies'] ?> publiés)</small>
+                        </div>
+                        <div class="stat-label">Avis laissés</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglets -->
             <div class="tabs">
-                <button class="tab-button active" data-tab="profil">📋 Mon Profil</button>
+                <button class="tab-button active" data-tab="profil">👤 Mon Profil</button>
                 <button class="tab-button" data-tab="historique">📜 Historique</button>
                 <button class="tab-button" data-tab="commentaires">💬 Mes Avis</button>
                 <button class="tab-button" data-tab="nouveau-avis">⭐ Laisser un avis</button>
             </div>
 
-            <!-- ONGLET 1 : MON PROFIL -->
+            <!-- ONGLET PROFIL -->
             <div id="profil" class="tab-content active">
                 <div class="card">
-                    <h3>Modifier mes informations</h3>
-                    <form method="post" action="./user.php">
-                        <div class="form-group">
-                            <label for="civilite">Civilité *</label>
-                            <select id="civilite" name="civilite" required>
-                                <option value="M." <?= $user['civilite'] === 'M.' ? 'selected' : '' ?>>M.</option>
-                                <option value="Mme" <?= $user['civilite'] === 'Mme' ? 'selected' : '' ?>>Mme</option>
-                                <option value="Mx" <?= $user['civilite'] === 'Mx' ? 'selected' : '' ?>>Mx</option>
-                            </select>
+                    <h3>📝 Modifier mes informations</h3>
+                    <form method="post" action="./user.php" class="user-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="civilite">Civilité *</label>
+                                <select id="civilite" name="civilite" required>
+                                    <option value="M." <?= $user['civilite'] === 'M.' ? 'selected' : '' ?>>M.</option>
+                                    <option value="Mme" <?= $user['civilite'] === 'Mme' ? 'selected' : '' ?>>Mme</option>
+                                    <option value="Mx" <?= $user['civilite'] === 'Mx' ? 'selected' : '' ?>>Mx</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="prenom">Prénom *</label>
+                                <input type="text" id="prenom" name="prenom" 
+                                       value="<?= htmlspecialchars($user['prenom']) ?>" 
+                                       required minlength="2" maxlength="50">
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="prenom">Prénom *</label>
-                            <input type="text" id="prenom" name="prenom" 
-                                   value="<?= htmlspecialchars($user['prenom']) ?>" 
-                                   required minlength="2" maxlength="50">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nom">Nom *</label>
+                                <input type="text" id="nom" name="nom" 
+                                       value="<?= htmlspecialchars($user['nom']) ?>" 
+                                       required minlength="2" maxlength="50">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email *</label>
+                                <input type="email" id="email" name="email" 
+                                       value="<?= htmlspecialchars($user['mail']) ?>" 
+                                       required>
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="nom">Nom *</label>
-                            <input type="text" id="nom" name="nom" 
-                                   value="<?= htmlspecialchars($user['nom']) ?>" 
-                                   required minlength="2" maxlength="50">
+                        <div class="form-actions">
+                            <button type="submit" name="modifier_profil" value="1" class="btn btn-primary">
+                                💾 Enregistrer les modifications
+                            </button>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="email">Email *</label>
-                            <input type="email" id="email" name="email" 
-                                   value="<?= htmlspecialchars($user['mail']) ?>" 
-                                   required>
-                        </div>
-                        
-                        <button type="submit" name="modifier_profil" value="1" class="btn">
-                            Enregistrer les modifications
-                        </button>
                     </form>
                 </div>
 
                 <div class="card">
-                    <h3>Changer mon mot de passe</h3>
-                    <form method="post" action="./user.php">
+                    <h3>🔒 Changer mon mot de passe</h3>
+                    <form method="post" action="./user.php" class="user-form">
                         <div class="form-group">
                             <label for="ancien_mdp">Ancien mot de passe *</label>
                             <input type="password" id="ancien_mdp" name="ancien_mdp" required>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="nouveau_mdp">Nouveau mot de passe * (min. 8 caractères)</label>
-                            <input type="password" id="nouveau_mdp" name="nouveau_mdp" 
-                                   required minlength="8">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nouveau_mdp">Nouveau mot de passe * (min. 8 caractères)</label>
+                                <input type="password" id="nouveau_mdp" name="nouveau_mdp" 
+                                       required minlength="8">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirmer_mdp">Confirmer le nouveau mot de passe *</label>
+                                <input type="password" id="confirmer_mdp" name="confirmer_mdp" required>
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="confirmer_mdp">Confirmer le nouveau mot de passe *</label>
-                            <input type="password" id="confirmer_mdp" name="confirmer_mdp" required>
+                        <div class="form-actions">
+                            <button type="submit" name="changer_mdp" value="1" class="btn btn-primary">
+                                🔐 Changer le mot de passe
+                            </button>
                         </div>
-                        
-                        <button type="submit" name="changer_mdp" value="1" class="btn">
-                            Changer le mot de passe
-                        </button>
                     </form>
+                </div>
+
+                <div class="card danger-zone">
+                    <h3>⚠️ Zone dangereuse</h3>
+                    <p><strong>Attention :</strong> La suppression de votre compte est définitive et irréversible.</p>
+                    <button class="btn btn-danger" onclick="showDeleteModal()">
+                        🗑️ Supprimer mon compte
+                    </button>
                 </div>
             </div>
 
-            <!-- ONGLET 2 : HISTORIQUE -->
+            <!-- ONGLET HISTORIQUE -->
             <div id="historique" class="tab-content">
                 <div class="card">
                     <h3>📧 Mes demandes de contact (<?= count($historique_contacts) ?>)</h3>
                     <?php if (empty($historique_contacts)): ?>
                         <div class="empty-state">
+                            <div class="empty-icon">📭</div>
                             <p>Aucune demande de contact pour le moment</p>
+                            <a href="./contact.php" class="btn">Nous contacter</a>
                         </div>
                     <?php else: ?>
-                        <table class="history-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Sujet</th>
-                                    <th>Message</th>
-                                    <th>Statut</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($historique_contacts as $contact): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($contact['date_fr']) ?></td>
-                                    <td><?= htmlspecialchars($contact['sujet'] ?? 'Sans sujet') ?></td>
-                                    <td><?= htmlspecialchars(substr($contact['message'], 0, 50)) ?>...</td>
-                                    <td>
-                                        <span class="status-badge status-<?= $contact['status'] ?>">
-                                            <?php
-                                            $statuts = ['new' => 'Nouveau', 'read' => 'Lu', 'closed' => 'Traité'];
-                                            echo $statuts[$contact['status']] ?? $contact['status'];
-                                            ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="user-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Sujet</th>
+                                        <th>Message</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($historique_contacts as $contact): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($contact['date_fr']) ?></td>
+                                        <td><strong><?= htmlspecialchars($contact['sujet'] ?? 'Sans sujet') ?></strong></td>
+                                        <td class="text-truncate"><?= htmlspecialchars(substr($contact['message'], 0, 60)) ?>...</td>
+                                        <td>
+                                            <span class="status-badge status-<?= $contact['status'] ?>">
+                                                <?php
+                                                $statuts = ['new' => '🆕 Nouveau', 'read' => '📖 Lu', 'closed' => '✅ Traité'];
+                                                echo $statuts[$contact['status']] ?? $contact['status'];
+                                                ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -375,127 +483,157 @@ try {
                     <h3>📄 Mes demandes de devis (<?= count($historique_devis) ?>)</h3>
                     <?php if (empty($historique_devis)): ?>
                         <div class="empty-state">
+                            <div class="empty-icon">📋</div>
                             <p>Aucune demande de devis pour le moment</p>
                         </div>
                     <?php else: ?>
-                        <table class="history-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Type</th>
-                                    <th>Demande</th>
-                                    <th>Statut</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($historique_devis as $devis): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($devis['date_fr']) ?></td>
-                                    <td><?= htmlspecialchars($devis['Professionnels_Particuliers'] ?? 'N/A') ?></td>
-                                    <td><?= htmlspecialchars(substr($devis['message'], 0, 50)) ?>...</td>
-                                    <td>
-                                        <span class="status-badge status-<?= $devis['status'] ?>">
-                                            <?php
-                                            $statuts = ['new' => 'Nouveau', 'in_progress' => 'En cours', 'closed' => 'Traité'];
-                                            echo $statuts[$devis['status']] ?? $devis['status'];
-                                            ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="user-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Demande</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($historique_devis as $devis): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($devis['date_fr']) ?></td>
+                                        <td><span class="badge-type"><?= htmlspecialchars($devis['Professionnels_Particuliers'] ?? 'N/A') ?></span></td>
+                                        <td class="text-truncate"><?= htmlspecialchars(substr($devis['message'] ?? '', 0, 60)) ?>...</td>
+                                        <td>
+                                            <span class="status-badge status-<?= $devis['status'] ?>">
+                                                <?php
+                                                $statuts = ['new' => '🆕 Nouveau', 'in_progress' => '🔄 En cours', 'closed' => '✅ Traité'];
+                                                echo $statuts[$devis['status']] ?? $devis['status'];
+                                                ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <!-- ONGLET 3 : MES AVIS -->
+            <!-- ONGLET MES AVIS -->
             <div id="commentaires" class="tab-content">
                 <div class="card">
                     <h3>⭐ Mes avis laissés (<?= count($mes_commentaires) ?>)</h3>
                     <?php if (empty($mes_commentaires)): ?>
                         <div class="empty-state">
+                            <div class="empty-icon">💭</div>
                             <p>Vous n'avez pas encore laissé d'avis</p>
                             <button class="btn" onclick="switchTab('nouveau-avis')">Laisser un avis</button>
                         </div>
                     <?php else: ?>
-                        <table class="history-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Note</th>
-                                    <th>Commentaire</th>
-                                    <th>Statut</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($mes_commentaires as $com): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($com['date_fr']) ?></td>
-                                    <td>
-                                        <?php for($i=0; $i<$com['note']; $i++): ?>
-                                            <span style="color: #ffc107;">★</span>
+                        <div class="comments-list">
+                            <?php foreach ($mes_commentaires as $com): ?>
+                            <div class="comment-item <?= $com['approved'] ? 'comment-approved' : 'comment-pending' ?>">
+                                <div class="comment-header">
+                                    <div class="comment-stars">
+                                        <?php for($i=0; $i<5; $i++): ?>
+                                            <span class="star <?= $i < $com['note'] ? 'active' : '' ?>">★</span>
                                         <?php endfor; ?>
-                                        <?php for($i=$com['note']; $i<5; $i++): ?>
-                                            <span style="color: #ddd;">★</span>
-                                        <?php endfor; ?>
-                                    </td>
-                                    <td><?= htmlspecialchars(substr($com['commentaire'], 0, 60)) ?>...</td>
-                                    <td>
-                                        <span class="status-badge <?= $com['approved'] ? 'status-approved' : 'status-pending' ?>">
-                                            <?= $com['approved'] ? 'Publié' : 'En attente' ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                    </div>
+                                    <div class="comment-meta">
+                                        <?= htmlspecialchars($com['date_fr']) ?>
+                                    </div>
+                                </div>
+                                <div class="comment-text">
+                                    <?= htmlspecialchars($com['commentaire']) ?>
+                                </div>
+                                <div class="comment-status">
+                                    <?php if ($com['approved'] == 1): ?>
+                                        <span class="status-badge status-published">✓ Publié</span>
+                                    <?php else: ?>
+                                        <span class="status-badge status-pending">⏳ En attente de modération</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <!-- ONGLET 4 : NOUVEAU AVIS -->
+            <!-- ONGLET NOUVEAU AVIS -->
             <div id="nouveau-avis" class="tab-content">
                 <div class="card">
                     <h3>⭐ Laisser un avis sur nos services</h3>
-                    <form method="post" action="./user.php">
+                    <form method="post" action="./user.php" class="user-form">
                         <div class="form-group">
                             <label>Votre note *</label>
                             <div class="stars-container">
-                                <div class="stars" id="starRating">
+                                <div class="stars-input" id="starRating">
                                     <span class="star" data-rating="1">★</span>
                                     <span class="star" data-rating="2">★</span>
                                     <span class="star" data-rating="3">★</span>
                                     <span class="star" data-rating="4">★</span>
                                     <span class="star" data-rating="5">★</span>
                                 </div>
-                                <span id="ratingText" style="margin-left: 15px; color: #666;">
-                                    Cliquez sur les étoiles
-                                </span>
+                                <span class="rating-text" id="ratingText">Cliquez sur les étoiles pour noter</span>
                             </div>
                             <input type="hidden" id="note-value" name="note" value="0" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="commentaire">Votre avis * (10-500 caractères)</label>
-                            <textarea id="commentaire" name="commentaire" rows="5" 
+                            <textarea id="commentaire" name="commentaire" rows="6" 
                                       required minlength="10" maxlength="500"
                                       placeholder="Partagez votre expérience avec nos services..."></textarea>
-                            <small style="color: #999;">Caractères restants : <span id="charCount">500</span></small>
+                            <div class="char-counter">
+                                Caractères : <span id="charCount">0</span> / 500
+                            </div>
                         </div>
                         
-                        <button type="submit" name="envoyer_commentaire" value="1" class="btn">
-                            Publier mon avis
-                        </button>
+                        <div class="form-actions">
+                            <button type="submit" name="envoyer_commentaire" value="1" class="btn btn-primary">
+                                📤 Publier mon avis
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </main>
-    <?php
-        include "./includes/footer.php";
-    ?>  
+
+    <!-- Modal suppression compte -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeDeleteModal()">&times;</span>
+            <h3>⚠️ Supprimer mon compte</h3>
+            <p><strong>Attention :</strong> Cette action est irréversible !</p>
+            <p>Toutes vos données seront définitivement supprimées :</p>
+            <ul>
+                <li>Vos informations personnelles</li>
+                <li>Vos commentaires</li>
+                <li>Votre historique de messages</li>
+            </ul>
+            <form method="post" action="./user.php">
+                <div class="form-group">
+                    <label for="confirmation">Tapez <strong>SUPPRIMER</strong> pour confirmer :</label>
+                    <input type="text" id="confirmation" name="confirmation" 
+                           placeholder="SUPPRIMER" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Annuler</button>
+                    <button type="submit" name="supprimer_compte" value="1" class="btn btn-danger">
+                        Supprimer définitivement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <?php include "./includes/footer.php"; ?>
+
     <script src="./asset/Js/jquery-3.7.1.min.js"></script>
     <script src="./asset/Js/script.js"></script>
+    <script src="./asset/Js/admin.js"></script>
 </body>
 </html>

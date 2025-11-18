@@ -1,227 +1,941 @@
 <?php
-    session_start();
-    include "./includes/connexionbdd.php";
-    include "./includes/fonctions.php";
-    if (!isset($connexion))
-    {
-        die("Erreur: connexion à la BDD introuvable.");
-    }
+session_start();
+date_default_timezone_set('Europe/Paris');
 
-    // -----------------------------------Admin-----------------------------------//
-    $stmt = $connexion->prepare("SELECT prenom, nom FROM users WHERE role = 'admin'");
-    $stmt->execute();
-    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+// Configuration
+define('SITE_TITLE', 'Thierry Decramp - SECIC');
+define('UPLOAD_DIR', './asset/image/galerie/');
+define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5 MB
 
-    // -----------------------------------Service-----------------------------------//
-    // --- SUPPRESSION d’un service ---
-    if (isset($_GET['delete']))
-    {
-        $id = (int)$_GET['delete'];
+// Vérifier si l'utilisateur est admin
+if (!isset($_SESSION['connexion']) || $_SESSION['connexion'] !== true || 
+    !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    $_SESSION['flash_error'] = "Accès réservé aux administrateurs.";
+    header("Location: ./connexion.php");
+    exit;
+}
+
+include_once "./includes/connexionbdd.php";
+include_once "./includes/fonctions.php";
+
+if (!isset($connexion)) {
+    die("Erreur: connexion à la BDD introuvable.");
+}
+
+// ========== GESTION DES SERVICES ==========
+if (isset($_GET['delete_service'])) {
+    $id = (int)$_GET['delete_service'];
+    try {
         $stmt = $connexion->prepare("DELETE FROM services WHERE id = ?");
         $stmt->execute([$id]);
-        header("Location: admin.php");
-        exit;
+        $_SESSION['flash_success'] = "Service supprimé avec succès.";
+    } catch(PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors de la suppression.";
+        error_log("Erreur suppression service : " . $e->getMessage());
     }
+    header("Location: admin.php#services");
+    exit;
+}
 
-    // --- AJOUT d’un service ---
-    if (isset($_POST['ajouter']))
-    {
-        $title = trim($_POST['title']);
-        // Génération du slug
-        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-éèàùêûîô]+/', '-', $title)));
-        $description = trim($_POST['description']);
-        $categorie = $_POST['categorie'];
+if (isset($_POST['ajouter_service'])) {
+    $title = trim($_POST['title']);
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', 
+            iconv('UTF-8', 'ASCII//TRANSLIT', $title))));
+    $description = trim($_POST['description']);
+    $categorie = $_POST['categorie'];
 
-        $stmt = $connexion->prepare("INSERT INTO services (title, slug, description, categorie) VALUES (?, ?, ?, ?)");
+    try {
+        $stmt = $connexion->prepare("INSERT INTO services (title, slug, description, categorie) 
+                                     VALUES (?, ?, ?, ?)");
         $stmt->execute([$title, $slug, $description, $categorie]);
-
-        header("Location: admin.php");
-        exit;
+        $_SESSION['flash_success'] = "Service ajouté avec succès.";
+    } catch(PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors de l'ajout du service.";
+        error_log("Erreur ajout service : " . $e->getMessage());
     }
+    header("Location: admin.php#services");
+    exit;
+}
 
-    // --- RÉCUPÉRATION des services ---
-    $services = $connexion->query("SELECT * FROM services ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
+if (isset($_POST['modifier_service'])) {
+    $id = (int)$_POST['service_id'];
+    $title = trim($_POST['title']);
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', 
+            iconv('UTF-8', 'ASCII//TRANSLIT', $title))));
+    $description = trim($_POST['description']);
+    $categorie = $_POST['categorie'];
 
+    try {
+        $stmt = $connexion->prepare("UPDATE services SET title = ?, slug = ?, description = ?, categorie = ? WHERE id = ?");
+        $stmt->execute([$title, $slug, $description, $categorie, $id]);
+        $_SESSION['flash_success'] = "Service modifié avec succès.";
+    } catch(PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors de la modification.";
+        error_log("Erreur modification service : " . $e->getMessage());
+    }
+    header("Location: admin.php#services");
+    exit;
+}
 
+// ========== GESTION DES COMMENTAIRES ==========
+if (isset($_GET['approve_comment'])) {
+    $id = (int)$_GET['approve_comment'];
+    try {
+        $stmt = $connexion->prepare("UPDATE commentaire SET approved = 1 WHERE id = ?");
+        $stmt->execute([$id]);
+        $_SESSION['flash_success'] = "Commentaire approuvé et publié.";
+    } catch(PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors de l'approbation.";
+        error_log("Erreur approbation commentaire : " . $e->getMessage());
+    }
+    header("Location: admin.php#commentaires");
+    exit;
+}
+
+if (isset($_GET['reject_comment'])) {
+    $id = (int)$_GET['reject_comment'];
+    try {
+        $stmt = $connexion->prepare("UPDATE commentaire SET approved = -1 WHERE id = ?");
+        $stmt->execute([$id]);
+        $_SESSION['flash_success'] = "Commentaire rejeté.";
+    } catch(PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors du rejet.";
+        error_log("Erreur rejet commentaire : " . $e->getMessage());
+    }
+    header("Location: admin.php#commentaires");
+    exit;
+}
+
+if (isset($_GET['delete_comment'])) {
+    $id = (int)$_GET['delete_comment'];
+    try {
+        $stmt = $connexion->prepare("DELETE FROM commentaire WHERE id = ?");
+        $stmt->execute([$id]);
+        $_SESSION['flash_success'] = "Commentaire supprimé définitivement.";
+    } catch(PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors de la suppression.";
+        error_log("Erreur suppression commentaire : " . $e->getMessage());
+    }
+    header("Location: admin.php#commentaires");
+    exit;
+}
+
+// ========== GESTION DES GALERIES ==========
+if (isset($_POST['upload_image'])) {
+    $service_id = !empty($_POST['service_id']) ? (int)$_POST['service_id'] : null;
+    $legende = trim($_POST['legende']);
+    
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        $file_type = $_FILES['image']['type'];
+        $file_size = $_FILES['image']['size'];
+        
+        if (!in_array($file_type, $allowed_types)) {
+            $_SESSION['flash_error'] = "Type de fichier non autorisé. Utilisez JPG, PNG ou WebP.";
+        }
+        elseif ($file_size > MAX_FILE_SIZE) {
+            $_SESSION['flash_error'] = "Fichier trop volumineux (max 5 MB).";
+        }
+        else {
+            $extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+            $filename = uniqid('img_', true) . '.' . strtolower($extension);
+            
+            if (!is_dir(UPLOAD_DIR)) {
+                mkdir(UPLOAD_DIR, 0755, true);
+            }
+            
+            if (move_uploaded_file($_FILES['image']['tmp_name'], UPLOAD_DIR . $filename)) {
+                try {
+                    $stmt = $connexion->prepare("INSERT INTO galeries (service_id, filename, legende) 
+                                                 VALUES (?, ?, ?)");
+                    $stmt->execute([$service_id, $filename, $legende]);
+                    $_SESSION['flash_success'] = "Image uploadée avec succès.";
+                } catch(PDOException $e) {
+                    $_SESSION['flash_error'] = "Erreur lors de l'enregistrement.";
+                    error_log("Erreur upload image : " . $e->getMessage());
+                }
+            } else {
+                $_SESSION['flash_error'] = "Erreur lors de l'upload du fichier.";
+            }
+        }
+    } else {
+        $_SESSION['flash_error'] = "Aucun fichier sélectionné ou erreur d'upload.";
+    }
+    header("Location: admin.php#galeries");
+    exit;
+}
+
+if (isset($_GET['delete_image'])) {
+    $id = (int)$_GET['delete_image'];
+    try {
+        $stmt = $connexion->prepare("SELECT filename FROM galeries WHERE id = ?");
+        $stmt->execute([$id]);
+        $image = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($image) {
+            $filepath = UPLOAD_DIR . $image['filename'];
+            if (file_exists($filepath)) {
+                unlink($filepath);
+            }
+            
+            $stmt = $connexion->prepare("DELETE FROM galeries WHERE id = ?");
+            $stmt->execute([$id]);
+            $_SESSION['flash_success'] = "Image supprimée avec succès.";
+        }
+    } catch(PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors de la suppression.";
+        error_log("Erreur suppression image : " . $e->getMessage());
+    }
+    header("Location: admin.php#galeries");
+    exit;
+}
+
+// ========== GESTION DES CONTACTS ==========
+if (isset($_GET['update_contact_status'])) {
+    $id = (int)$_GET['update_contact_status'];
+    $status = $_GET['status'] ?? 'read';
+    
+    if (in_array($status, ['new', 'read', 'closed'])) {
+        try {
+            $stmt = $connexion->prepare("UPDATE contact SET status = ? WHERE id = ?");
+            $stmt->execute([$status, $id]);
+            $_SESSION['flash_success'] = "Statut mis à jour.";
+        } catch(PDOException $e) {
+            $_SESSION['flash_error'] = "Erreur lors de la mise à jour.";
+            error_log("Erreur update contact : " . $e->getMessage());
+        }
+    }
+    header("Location: admin.php#contacts");
+    exit;
+}
+
+if (isset($_GET['delete_contact'])) {
+    $id = (int)$_GET['delete_contact'];
+    try {
+        $stmt = $connexion->prepare("DELETE FROM contact WHERE id = ?");
+        $stmt->execute([$id]);
+        $_SESSION['flash_success'] = "Contact supprimé.";
+    } catch(PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors de la suppression.";
+        error_log("Erreur suppression contact : " . $e->getMessage());
+    }
+    header("Location: admin.php#contacts");
+    exit;
+}
+
+// ========== GESTION DES DEVIS ==========
+if (isset($_GET['update_devis_status'])) {
+    $id = (int)$_GET['update_devis_status'];
+    $status = $_GET['status'] ?? 'in_progress';
+    
+    if (in_array($status, ['new', 'in_progress', 'closed'])) {
+        try {
+            $stmt = $connexion->prepare("UPDATE requete_devis SET status = ? WHERE id = ?");
+            $stmt->execute([$status, $id]);
+            $_SESSION['flash_success'] = "Statut mis à jour.";
+        } catch(PDOException $e) {
+            $_SESSION['flash_error'] = "Erreur lors de la mise à jour.";
+            error_log("Erreur update devis : " . $e->getMessage());
+        }
+    }
+    header("Location: admin.php#devis");
+    exit;
+}
+
+if (isset($_GET['delete_devis'])) {
+    $id = (int)$_GET['delete_devis'];
+    try {
+        $stmt = $connexion->prepare("DELETE FROM requete_devis WHERE id = ?");
+        $stmt->execute([$id]);
+        $_SESSION['flash_success'] = "Demande de devis supprimée.";
+    } catch(PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors de la suppression.";
+        error_log("Erreur suppression devis : " . $e->getMessage());
+    }
+    header("Location: admin.php#devis");
+    exit;
+}
+
+// ========== GESTION DES UTILISATEURS ==========
+if (isset($_GET['delete_user'])) {
+    $id = (int)$_GET['delete_user'];
+    
+    // Empêcher la suppression de soi-même
+    if ($id === $_SESSION['id']) {
+        $_SESSION['flash_error'] = "Vous ne pouvez pas supprimer votre propre compte.";
+    } else {
+        try {
+            $stmt = $connexion->prepare("DELETE FROM users WHERE id = ?");
+            $stmt->execute([$id]);
+            $_SESSION['flash_success'] = "Utilisateur supprimé.";
+        } catch(PDOException $e) {
+            $_SESSION['flash_error'] = "Erreur lors de la suppression.";
+            error_log("Erreur suppression user : " . $e->getMessage());
+        }
+    }
+    header("Location: admin.php#utilisateurs");
+    exit;
+}
+
+// ========== RÉCUPÉRATION DES DONNÉES ==========
+$stmt = $connexion->prepare("SELECT prenom, nom FROM users WHERE id = ?");
+$stmt->execute([$_SESSION['id']]);
+$admin = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$services = $connexion->query("SELECT * FROM services ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
+$commentaires = $connexion->query("SELECT * FROM commentaire ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
+$galeries = $connexion->query("SELECT g.*, s.title as service_title 
+                               FROM galeries g 
+                               LEFT JOIN services s ON g.service_id = s.id 
+                               ORDER BY g.date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
+$contacts = $connexion->query("SELECT * FROM contact ORDER BY date_creation DESC LIMIT 50")->fetchAll(PDO::FETCH_ASSOC);
+$devis = $connexion->query("SELECT * FROM requete_devis ORDER BY date_creation DESC LIMIT 50")->fetchAll(PDO::FETCH_ASSOC);
+$users = $connexion->query("SELECT * FROM users ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
+
+// Statistiques
+$stats = [
+    'total_services' => $connexion->query("SELECT COUNT(*) FROM services")->fetchColumn(),
+    'total_users' => $connexion->query("SELECT COUNT(*) FROM users")->fetchColumn(),
+    'total_commentaires' => $connexion->query("SELECT COUNT(*) FROM commentaire")->fetchColumn(),
+    'commentaires_attente' => $connexion->query("SELECT COUNT(*) FROM commentaire WHERE approved = 0")->fetchColumn(),
+    'total_contacts' => $connexion->query("SELECT COUNT(*) FROM contact")->fetchColumn(),
+    'contacts_nouveaux' => $connexion->query("SELECT COUNT(*) FROM contact WHERE status = 'new'")->fetchColumn(),
+    'total_devis' => $connexion->query("SELECT COUNT(*) FROM requete_devis")->fetchColumn(),
+    'devis_nouveaux' => $connexion->query("SELECT COUNT(*) FROM requete_devis WHERE status = 'new'")->fetchColumn(),
+    'total_galeries' => $connexion->query("SELECT COUNT(*) FROM galeries")->fetchColumn(),
+];
+
+$flash_success = $_SESSION['flash_success'] ?? '';
+$flash_error = $_SESSION['flash_error'] ?? '';
+unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 ?>
-<!------------------------------------------------------------------------------>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="keywords" content="">
-    <meta name="author" content="">
+    <meta name="description" content="Panneau d'administration - Gestion du site">
+    <meta name="author" content="SECIC - Thierry Decramp">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles principaux -->
     <link rel="stylesheet" href="./asset/css/style2.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/favicon" href="./asset/image/OIP.webp">
-    <title>Admins</title>
+    <!-- Styles admin -->
+    <link rel="stylesheet" href="./asset/css/admin.css">
+    
+    <link rel="icon" type="image/webp" href="./asset/image/OIP.webp">
+    
+    <title>Administration - <?php echo SITE_TITLE; ?></title>
 </head>
 <body>
-    <?php
-        include "./includes/header.php";
-    ?>
+    <?php include "./includes/header.php"; ?>
+    
     <main>
-    <?php
-         if ($admin)
-        {
-            // Affichage du nom dans une balise <h1>
-            echo "<h1>Bienvenu " . htmlspecialchars($admin['prenom']) . " " . htmlspecialchars($admin['nom']) . "</h1>";
-        }
-        else
-        {
-                echo "<h1>Admin non trouvé</h1>";
-        }
-    ?>
-    <!------------------------------------ SERVICE ---------------------------------->
-    <section>
-        <h2>Gestion des services</h2>
-        <br>
-        <!-- Formulaire d’ajout -->
-        <div class="contact">
-            <div class="contact-form">
-            <form method="POST">
-                <h3>Ajouter un nouveau service</h3>
-                <label>Titre :</label>
-                <input type="text" name="title" required>
+        <div class="admin-container">
+            <!-- Header -->
+            <div class="admin-header">
+                <div>
+                    <h1>👨‍💼 Panneau d'administration</h1>
+                    <p>Bienvenue <?php echo htmlspecialchars($admin['prenom'] . ' ' . $admin['nom']); ?></p>
+                </div>
+                <div class="header-actions">
+                    <a href="./user.php" class="btn btn-secondary">Mon profil</a>
+                    <a href="./deconnexion.php" class="btn btn-logout">Déconnexion</a>
+                </div>
+            </div>
 
-                <label>Description :</label>
-                <textarea name="description" rows="4"></textarea>
+            <!-- Messages flash -->
+            <?php if (!empty($flash_success)): ?>
+                <div class="alert alert-success" role="alert">
+                    <strong>✓</strong> <?= htmlspecialchars($flash_success) ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($flash_error)): ?>
+                <div class="alert alert-error" role="alert">
+                    <strong>⚠</strong> <?= htmlspecialchars($flash_error) ?>
+                </div>
+            <?php endif; ?>
 
-                <label>Catégorie :</label>
-                <select name="categorie">
-                    <option value="particulier">Particulier</option>
-                    <option value="professionnel">Professionnel</option>
-                    <option value="autre">Autre</option>
-                </select>
+            <!-- Statistiques -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-info">
+                        <div class="stat-number"><?= $stats['total_services'] ?></div>
+                        <div class="stat-label">Services</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">💬</div>
+                    <div class="stat-info">
+                        <div class="stat-number">
+                            <?= $stats['total_commentaires'] ?>
+                            <?php if ($stats['commentaires_attente'] > 0): ?>
+                                <span class="badge badge-warning"><?= $stats['commentaires_attente'] ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="stat-label">Commentaires</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📧</div>
+                    <div class="stat-info">
+                        <div class="stat-number">
+                            <?= $stats['total_contacts'] ?>
+                            <?php if ($stats['contacts_nouveaux'] > 0): ?>
+                                <span class="badge badge-danger"><?= $stats['contacts_nouveaux'] ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="stat-label">Messages</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📄</div>
+                    <div class="stat-info">
+                        <div class="stat-number">
+                            <?= $stats['total_devis'] ?>
+                            <?php if ($stats['devis_nouveaux'] > 0): ?>
+                                <span class="badge badge-danger"><?= $stats['devis_nouveaux'] ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="stat-label">Devis</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🖼️</div>
+                    <div class="stat-info">
+                        <div class="stat-number"><?= $stats['total_galeries'] ?></div>
+                        <div class="stat-label">Images</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <div class="stat-number"><?= $stats['total_users'] ?></div>
+                        <div class="stat-label">Utilisateurs</div>
+                    </div>
+                </div>
+            </div>
 
-                <button type="submit" name="ajouter">Ajouter</button>
-            </form>
+            <!-- Onglets -->
+            <div class="tabs">
+                <button class="tab-button active" data-tab="dashboard">📊 Dashboard</button>
+                <button class="tab-button" data-tab="services">📋 Services</button>
+                <button class="tab-button" data-tab="commentaires">
+                    💬 Commentaires
+                    <?php if ($stats['commentaires_attente'] > 0): ?>
+                        <span class="tab-badge"><?= $stats['commentaires_attente'] ?></span>
+                    <?php endif; ?>
+                </button>
+                <button class="tab-button" data-tab="galeries">🖼️ Galeries</button>
+                <button class="tab-button" data-tab="contacts">
+                    📧 Contacts
+                    <?php if ($stats['contacts_nouveaux'] > 0): ?>
+                        <span class="tab-badge"><?= $stats['contacts_nouveaux'] ?></span>
+                    <?php endif; ?>
+                </button>
+                <button class="tab-button" data-tab="devis">
+                    📄 Devis
+                    <?php if ($stats['devis_nouveaux'] > 0): ?>
+                        <span class="tab-badge"><?= $stats['devis_nouveaux'] ?></span>
+                    <?php endif; ?>
+                </button>
+                <button class="tab-button" data-tab="utilisateurs">👥 Utilisateurs</button>
+            </div>
+
+            <!-- ONGLET DASHBOARD -->
+            <div id="dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>📊 Activité récente</h3>
+                        <div class="activity-list">
+                            <?php
+                            $recent_comments = $connexion->query("SELECT pseudo, DATE_FORMAT(date_creation, '%d/%m/%Y %H:%i') as date FROM commentaire ORDER BY date_creation DESC LIMIT 5")->fetchAll();
+                            foreach ($recent_comments as $comment): ?>
+                                <div class="activity-item">
+                                    <span class="activity-icon">💬</span>
+                                    <span class="activity-text">
+                                        <strong><?= htmlspecialchars($comment['pseudo']) ?></strong> a laissé un commentaire
+                                    </span>
+                                    <span class="activity-time"><?= $comment['date'] ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>🔔 Notifications</h3>
+                        <div class="notification-list">
+                            <?php if ($stats['commentaires_attente'] > 0): ?>
+                                <div class="notification-item warning">
+                                    <span class="notification-icon">⚠️</span>
+                                    <span><?= $stats['commentaires_attente'] ?> commentaire(s) en attente de modération</span>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($stats['contacts_nouveaux'] > 0): ?>
+                                <div class="notification-item info">
+                                    <span class="notification-icon">📬</span>
+                                    <span><?= $stats['contacts_nouveaux'] ?> nouveau(x) message(s) non lu(s)</span>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($stats['devis_nouveaux'] > 0): ?>
+                                <div class="notification-item info">
+                                    <span class="notification-icon">📄</span>
+                                    <span><?= $stats['devis_nouveaux'] ?> nouvelle(s) demande(s) de devis</span>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($stats['commentaires_attente'] == 0 && $stats['contacts_nouveaux'] == 0 && $stats['devis_nouveaux'] == 0): ?>
+                                <div class="notification-item success">
+                                    <span class="notification-icon">✅</span>
+                                    <span>Aucune notification en attente</span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET SERVICES -->
+            <div id="services" class="tab-content">
+                <div class="card">
+                    <h3>➕ Ajouter un nouveau service</h3>
+                    <form method="POST" class="admin-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="title">Titre *</label>
+                                <input type="text" id="title" name="title" required placeholder="Ex: Installation électrique">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="categorie">Catégorie *</label>
+                                <select id="categorie" name="categorie" required>
+                                    <option value="particulier">Particulier</option>
+                                    <option value="professionnel">Professionnel</option>
+                                    <option value="autre">Autre</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" rows="4" placeholder="Description détaillée du service..."></textarea>
+                        </div>
+                        
+                        <button type="submit" name="ajouter_service" value="1" class="btn btn-primary">
+                            ➕ Ajouter le service
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>📋 Liste des services (<?= count($services) ?>)</h3>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Titre</th>
+                                    <th>Slug</th>
+                                    <th>Description</th>
+                                    <th>Catégorie</th>
+                                    <th>Date création</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($services as $service): ?>
+                                <tr>
+                                    <td><?= $service['id'] ?></td>
+                                    <td><strong><?= htmlspecialchars($service['title']) ?></strong></td>
+                                    <td><code><?= htmlspecialchars($service['slug']) ?></code></td>
+                                    <td><?= htmlspecialchars(substr($service['description'] ?? '', 0, 60)) ?>...</td>
+                                    <td><span class="badge badge-<?= $service['categorie'] ?>"><?= htmlspecialchars($service['categorie']) ?></span></td>
+                                    <td><?= date('d/m/Y', strtotime($service['date_creation'])) ?></td>
+                                    <td>
+                                        <button class="btn-icon btn-edit" onclick="editService(<?= htmlspecialchars(json_encode($service)) ?>)" title="Modifier">
+                                            ✏️
+                                        </button>
+                                        <a href="?delete_service=<?= $service['id'] ?>" 
+                                           class="btn-icon btn-delete" 
+                                           onclick="return confirm('Supprimer ce service ?')"
+                                           title="Supprimer">
+                                            🗑️
+                                        </a>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET COMMENTAIRES -->
+            <div id="commentaires" class="tab-content">
+                <div class="card">
+                    <h3>💬 Gestion des commentaires (<?= count($commentaires) ?>)</h3>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Pseudo</th>
+                                    <th>Email</th>
+                                    <th>Note</th>
+                                    <th>Commentaire</th>
+                                    <th>Date</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($commentaires as $comment): ?>
+                                <tr class="<?= $comment['approved'] == 0 ? 'row-pending' : '' ?>">
+                                    <td><?= $comment['id'] ?></td>
+                                    <td><strong><?= htmlspecialchars($comment['pseudo']) ?></strong></td>
+                                    <td><?= htmlspecialchars($comment['email'] ?? 'N/A') ?></td>
+                                    <td>
+                                        <div class="stars-display">
+                                            <?php for($i=0; $i<5; $i++): ?>
+                                                <span class="star <?= $i < $comment['note'] ? 'active' : '' ?>">★</span>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </td>
+                                    <td class="comment-text"><?= htmlspecialchars(substr($comment['commentaire'], 0, 80)) ?>...</td>
+                                    <td><?= date('d/m/Y H:i', strtotime($comment['date_creation'])) ?></td>
+                                    <td>
+                                        <?php if ($comment['approved'] == 1): ?>
+                                            <span class="badge badge-success">✓ Publié</span>
+                                        <?php elseif ($comment['approved'] == -1): ?>
+                                            <span class="badge badge-danger">✗ Rejeté</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-warning">⏳ En attente</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <?php if ($comment['approved'] != 1): ?>
+                                                <a href="?approve_comment=<?= $comment['id'] ?>" 
+                                                   class="btn-icon btn-success" 
+                                                   title="Approuver">
+                                                    ✓
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if ($comment['approved'] != -1): ?>
+                                                <a href="?reject_comment=<?= $comment['id'] ?>" 
+                                                   class="btn-icon btn-warning" 
+                                                   title="Rejeter">
+                                                    ✗
+                                                </a>
+                                            <?php endif; ?>
+                                            <a href="?delete_comment=<?= $comment['id'] ?>" 
+                                               class="btn-icon btn-delete" 
+                                               onclick="return confirm('Supprimer définitivement ce commentaire ?')"
+                                               title="Supprimer">
+                                                🗑️
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET GALERIES -->
+            <div id="galeries" class="tab-content">
+                <div class="card">
+                    <h3>📤 Uploader une nouvelle image</h3>
+                    <form method="POST" enctype="multipart/form-data" class="admin-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="image">Image * (JPG, PNG, WebP - Max 5 MB)</label>
+                                <input type="file" id="image" name="image" accept="image/*" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="service_id_img">Service associé (optionnel)</label>
+                                <select id="service_id_img" name="service_id">
+                                    <option value="">Aucun service</option>
+                                    <?php foreach ($services as $service): ?>
+                                        <option value="<?= $service['id'] ?>">
+                                            <?= htmlspecialchars($service['title']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="legende">Légende / Description</label>
+                            <input type="text" id="legende" name="legende" placeholder="Description de l'image...">
+                        </div>
+                        
+                        <button type="submit" name="upload_image" value="1" class="btn btn-primary">
+                            📤 Uploader l'image
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>🖼️ Galerie d'images (<?= count($galeries) ?>)</h3>
+                    <div class="gallery-grid">
+                        <?php foreach ($galeries as $img): ?>
+                        <div class="gallery-item">
+                            <img src="<?= UPLOAD_DIR . htmlspecialchars($img['filename']) ?>" 
+                                 alt="<?= htmlspecialchars($img['legende'] ?? 'Image') ?>">
+                            <div class="gallery-overlay">
+                                <div class="gallery-info">
+                                    <strong><?= htmlspecialchars($img['legende'] ?? 'Sans légende') ?></strong>
+                                    <?php if ($img['service_title']): ?>
+                                        <br><small>📋 <?= htmlspecialchars($img['service_title']) ?></small>
+                                    <?php endif; ?>
+                                    <br><small>📅 <?= date('d/m/Y', strtotime($img['date_creation'])) ?></small>
+                                </div>
+                            </div>
+                            <button class="gallery-delete-btn" 
+                                    onclick="if(confirm('Supprimer cette image ?')) location.href='?delete_image=<?= $img['id'] ?>'"
+                                    title="Supprimer">
+                                ×
+                            </button>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET CONTACTS -->
+            <div id="contacts" class="tab-content">
+                <div class="card">
+                    <h3>📧 Messages de contact (<?= count($contacts) ?>)</h3>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Nom</th>
+                                    <th>Email</th>
+                                    <th>Sujet</th>
+                                    <th>Message</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($contacts as $contact): ?>
+                                <tr class="<?= $contact['status'] == 'new' ? 'row-new' : '' ?>">
+                                    <td><?= $contact['id'] ?></td>
+                                    <td><?= date('d/m/Y H:i', strtotime($contact['date_creation'])) ?></td>
+                                    <td><strong><?= htmlspecialchars(($contact['prenom'] ?? '') . ' ' . ($contact['nom'] ?? '')) ?></strong></td>
+                                    <td><a href="mailto:<?= htmlspecialchars($contact['email']) ?>"><?= htmlspecialchars($contact['email']) ?></a></td>
+                                    <td><?= htmlspecialchars($contact['sujet'] ?? 'N/A') ?></td>
+                                    <td class="message-preview">
+                                        <span class="message-short"><?= htmlspecialchars(substr($contact['message'], 0, 50)) ?>...</span>
+                                        <button class="btn-link" onclick="showFullMessage(<?= $contact['id'] ?>, '<?= htmlspecialchars(addslashes($contact['message'])) ?>')">Voir plus</button>
+                                    </td>
+                                    <td>
+                                        <select class="status-select" onchange="updateContactStatus(<?= $contact['id'] ?>, this.value)">
+                                            <option value="new" <?= $contact['status'] == 'new' ? 'selected' : '' ?>>🆕 Nouveau</option>
+                                            <option value="read" <?= $contact['status'] == 'read' ? 'selected' : '' ?>>📖 Lu</option>
+                                            <option value="closed" <?= $contact['status'] == 'closed' ? 'selected' : '' ?>>✅ Traité</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <a href="?delete_contact=<?= $contact['id'] ?>" 
+                                           class="btn-icon btn-delete" 
+                                           onclick="return confirm('Supprimer ce contact ?')"
+                                           title="Supprimer">
+                                            🗑️
+                                        </a>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET DEVIS -->
+            <div id="devis" class="tab-content">
+                <div class="card">
+                    <h3>📄 Demandes de devis (<?= count($devis) ?>)</h3>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Contact</th>
+                                    <th>Email</th>
+                                    <th>Téléphone</th>
+                                    <th>Message</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($devis as $demande): ?>
+                                <tr class="<?= $demande['status'] == 'new' ? 'row-new' : '' ?>">
+                                    <td><?= $demande['id'] ?></td>
+                                    <td><?= date('d/m/Y H:i', strtotime($demande['date_creation'])) ?></td>
+                                    <td><span class="badge badge-info"><?= htmlspecialchars($demande['Professionnels_Particuliers'] ?? 'N/A') ?></span></td>
+                                    <td><strong><?= htmlspecialchars($demande['contact_name'] ?? 'N/A') ?></strong></td>
+                                    <td><a href="mailto:<?= htmlspecialchars($demande['email']) ?>"><?= htmlspecialchars($demande['email']) ?></a></td>
+                                    <td><?= htmlspecialchars($demande['phone'] ?? 'N/A') ?></td>
+                                    <td class="message-preview">
+                                        <span class="message-short"><?= htmlspecialchars(substr($demande['message'] ?? '', 0, 50)) ?>...</span>
+                                        <?php if (strlen($demande['message'] ?? '') > 50): ?>
+                                            <button class="btn-link" onclick="showFullMessage(<?= $demande['id'] ?>, '<?= htmlspecialchars(addslashes($demande['message'] ?? '')) ?>')">Voir plus</button>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <select class="status-select" onchange="updateDevisStatus(<?= $demande['id'] ?>, this.value)">
+                                            <option value="new" <?= $demande['status'] == 'new' ? 'selected' : '' ?>>🆕 Nouveau</option>
+                                            <option value="in_progress" <?= $demande['status'] == 'in_progress' ? 'selected' : '' ?>>🔄 En cours</option>
+                                            <option value="closed" <?= $demande['status'] == 'closed' ? 'selected' : '' ?>>✅ Traité</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <a href="?delete_devis=<?= $demande['id'] ?>" 
+                                           class="btn-icon btn-delete" 
+                                           onclick="return confirm('Supprimer cette demande ?')"
+                                           title="Supprimer">
+                                            🗑️
+                                        </a>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ONGLET UTILISATEURS -->
+            <div id="utilisateurs" class="tab-content">
+                <div class="card">
+                    <h3>👥 Liste des utilisateurs (<?= count($users) ?>)</h3>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Civilité</th>
+                                    <th>Nom complet</th>
+                                    <th>Email</th>
+                                    <th>Rôle</th>
+                                    <th>Date d'inscription</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($users as $user): ?>
+                                <tr class="<?= $user['id'] == $_SESSION['id'] ? 'row-current-user' : '' ?>">
+                                    <td><?= $user['id'] ?></td>
+                                    <td><?= htmlspecialchars($user['civilite'] ?? '') ?></td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($user['prenom'] . ' ' . $user['nom']) ?></strong>
+                                        <?php if ($user['id'] == $_SESSION['id']): ?>
+                                            <span class="badge badge-info">Vous</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?= htmlspecialchars($user['mail']) ?></td>
+                                    <td>
+                                        <?php if ($user['role'] == 'admin'): ?>
+                                            <span class="badge badge-danger">👑 Admin</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-secondary">👤 User</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?= date('d/m/Y H:i', strtotime($user['date_creation'])) ?></td>
+                                    <td>
+                                        <?php if ($user['id'] != $_SESSION['id']): ?>
+                                            <a href="?delete_user=<?= $user['id'] ?>" 
+                                               class="btn-icon btn-delete" 
+                                               onclick="return confirm('Supprimer cet utilisateur ?')"
+                                               title="Supprimer">
+                                                🗑️
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- Tableau des services -->
-        <table>
-            <tr>
-                <th>Titre</th>
-                <th>Slug</th>
-                <th>Description</th>
-                <th>Catégorie</th>
-                <th>Date création</th>
-                <th>Modif</th>
-            </tr>
-            <?php 
-                foreach ($services as $service): 
-            ?>
-            <tr>
-                <td><?= htmlspecialchars($service['title']) ?></td>
-                <td><?= htmlspecialchars($service['slug']) ?></td>
-                <td><?= htmlspecialchars(substr($service['description'], 0, 50)) ?>...</td>
-                <td><?= htmlspecialchars($service['categorie']) ?></td>
-                <td><?= htmlspecialchars($service['date_creation']) ?></td>
-                <td>
-                    <a href="?delete=<?= $service['id'] ?>" class="btn btn-delete" onclick="return confirm('Supprimer ce service ?')">Supprimer</a>
-                </td>
-            </tr>
-            <?php 
-                endforeach;
-             ?>
-        </table>
-    </section>
-    <br>
-    <!------------------------------------ Commentaire ---------------------------------->
-    <section>
-        <h2>Gestion des commentaires</h2>
-        <br>
-        <!-- Tableau des commentaires -->
-        <table>
-            <tr>
-                <th>Titre</th>
-                <th>Slug</th>
-                <th>Description</th>
-                <th>Catégorie</th>
-                <th>Date création</th>
-                <th>Modif</th>
-            </tr>
-            <?php 
-                foreach ($services as $service): 
-            ?>
-            <tr>
-                <td><?= htmlspecialchars($service['title']) ?></td>
-                <td><?= htmlspecialchars($service['slug']) ?></td>
-                <td><?= htmlspecialchars(substr($service['description'], 0, 50)) ?>...</td>
-                <td><?= htmlspecialchars($service['categorie']) ?></td>
-                <td><?= htmlspecialchars($service['date_creation']) ?></td>
-                <td>
-                    <a href="?delete=<?= $service['id'] ?>" class="btn btn-delete" onclick="return confirm('Supprimer ce service ?')">Supprimer</a>
-                </td>
-            </tr>
-            <?php 
-                endforeach;
-             ?>
-        </table>
-    </section>
-    <br>
-    <!------------------------------------ Galerie ---------------------------------->
-    <section>
-        <h2>Gestion des galeries</h2>
-        <br>
-        <!-- Formulaire d’ajout -->
-        <div class="contact">
-            <div class="contact-form">
-            <form method="POST">
-                <h3>Ajouter un nouveau service</h3>
-                <label>Titre :</label>
-                <input type="text" name="title" required>
-
-                <label>Description :</label>
-                <textarea name="description" rows="4"></textarea>
-
-                <label>Catégorie :</label>
-                <select name="categorie">
-                    <option value="particulier">Particulier</option>
-                    <option value="professionnel">Professionnel</option>
-                    <option value="autre">Autre</option>
-                </select>
-
-                <button type="submit" name="ajouter">Ajouter</button>
-            </form>
-            </div>
-        </div>
-        <!-- Tableau des galeries -->
-        <table>
-            <tr>
-                <th>Titre</th>
-                <th>Slug</th>
-                <th>Description</th>
-                <th>Catégorie</th>
-                <th>Date création</th>
-                <th>Modif</th>
-            </tr>
-            <?php 
-                foreach ($services as $service): 
-            ?>
-            <tr>
-                <td><?= htmlspecialchars($service['title']) ?></td>
-                <td><?= htmlspecialchars($service['slug']) ?></td>
-                <td><?= htmlspecialchars(substr($service['description'], 0, 50)) ?>...</td>
-                <td><?= htmlspecialchars($service['categorie']) ?></td>
-                <td><?= htmlspecialchars($service['date_creation']) ?></td>
-                <td>
-                    <a href="?delete=<?= $service['id'] ?>" class="btn btn-delete" onclick="return confirm('Supprimer ce service ?')">Supprimer</a>
-                </td>
-            </tr>
-            <?php 
-                endforeach;
-             ?>
-        </table>
-    </section>
     </main>
-    <?php
-        include "./includes/footer.php";
-    ?>  
+
+    <!-- Modal pour afficher les messages complets -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h3>Message complet</h3>
+            <div id="modalMessageContent"></div>
+        </div>
+    </div>
+
+    <!-- Modal pour éditer un service -->
+    <div id="editServiceModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeEditModal()">&times;</span>
+            <h3>Modifier le service</h3>
+            <form method="POST" class="admin-form">
+                <input type="hidden" id="edit_service_id" name="service_id">
+                
+                <div class="form-group">
+                    <label for="edit_title">Titre *</label>
+                    <input type="text" id="edit_title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_description">Description</label>
+                    <textarea id="edit_description" name="description" rows="4"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_categorie">Catégorie *</label>
+                    <select id="edit_categorie" name="categorie" required>
+                        <option value="particulier">Particulier</option>
+                        <option value="professionnel">Professionnel</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Annuler</button>
+                    <button type="submit" name="modifier_service" value="1" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <?php include "./includes/footer.php"; ?>
+
     <script src="./asset/Js/jquery-3.7.1.min.js"></script>
     <script src="./asset/Js/script.js"></script>
+    <script src="./asset/Js/admin.js"></script>
 </body>
 </html>
