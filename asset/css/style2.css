@@ -1,16 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@400;600&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Poppins", Arial, sans-serif;
+  font-family: "Open Sans", Arial, sans-serif;
+}
+
+/* Titres avec Montserrat */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
 }
 
 /* Couleurs principales */
 :root {
-  --primary: #007bff; /* bleu principal */
-  --secondary: #0056b3; /* bleu foncé */
-  --background: #f9f9f9;
+  --primary: #004080;      /* Bleu électrique */
+  --secondary: #FFCC00;    /* Jaune doré */
+  --background: #F5F5F5;   /* Gris clair */
   --text: #333;
+  --hover: #003366;        /* Bleu plus foncé pour hover */
 }
 
 /* Structure générale */
@@ -22,15 +31,16 @@ body {
 
 /* Header */
 header {
-  background: var(--secondary);
+  background: var(--primary);
   color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 40px;
+  box-shadow: 0 2px 8px rgba(0, 64, 128, 0.2);
 }
 
-/* ✅ Logo plus petit et bien centré */
+/* Logo plus petit et bien centré */
 .logo {
   display: flex;
   align-items: center;   /* Aligne verticalement le logo et le texte */
@@ -67,7 +77,8 @@ nav ul li a {
 }
 
 nav ul li a:hover {
-  color: #ffcc00;
+  color: var(--secondary);  /* Jaune doré */
+  text-decoration: underline;
 }
 
 /*Section Accueil */
@@ -81,6 +92,19 @@ nav ul li a:hover {
   align-items: center;
   color: white;
   text-align: center;
+}
+
+.hero .btn {
+  background-color: var(--primary);  /* Jaune doré */
+  color: var(--secondary);               /* Texte bleu */
+  font-weight: 700;
+}
+
+.hero .btn:hover {
+  background-color: var(--secondary);  /* Jaune doré */
+  color: var(--primary);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 204, 0, 0.4);
 }
 
 /* Images du slider */
@@ -122,21 +146,22 @@ nav ul li a:hover {
 }
 
 /* Bouton */
-.hero .btn {
+.btn {
   display: inline-block;
-  margin-top: 15px;
-  padding: 10px 25px;
-  background-color: #ffffff;
-  color: #000000;
-  border-radius: 5px;
+  background-color: var(--primary);
+  color: white;
+  padding: 12px 28px;
   text-decoration: none;
-  font-weight: bold;
+  border-radius: 8px;
+  font-weight: 600;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 64, 128, 0.15);
 }
 
-.hero .btn:hover {
-  background-color: #eaeaea;
-  transform: scale(1.05);
+.btn:hover {
+  background-color: var(--hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 64, 128, 0.25);
 }
 
 /* Points en haut à droite */
@@ -171,9 +196,11 @@ nav ul li a:hover {
 section h2 {
   background-color: var(--primary);
   color: white;
-  padding: 10px 20px;
-  font-size: 1.4em;
+  padding: 15px 20px;
+  font-size: 1.5em;
   text-align: center;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 64, 128, 0.15);
 }
 
 /* Section contenu (Particuliers, Professionnels) */
@@ -200,11 +227,17 @@ section h2 {
 }
 
 .gallery .item {
-  width: 220px;         
-  height: 160px;         
-  overflow: hidden;      
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  width: 220px;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 64, 128, 0.1);
+  transition: all 0.3s ease;
+}
+
+.gallery .item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 64, 128, 0.2);
 }
 
 .gallery img {
@@ -329,15 +362,19 @@ section h2 {
   background-color: var(--primary);
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
+  padding: 12px 28px;
+  border-radius: 8px;
   font-size: 1em;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 64, 128, 0.15);
 }
 
 .contact-form button:hover {
-  background-color: var(--secondary);
+  background-color: var(--hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 64, 128, 0.25);
 }
 
 /* ========== SYSTÈME D'ÉTOILES ========== */
@@ -366,12 +403,12 @@ section h2 {
 }
 
 .star.active {
-    color: #ffd700;
+    color: var(--secondary);  /* Jaune doré */
     animation: starPop 0.3s ease;
 }
 
 .star.hovered {
-    color: #ffd700;
+    color: var(--secondary); 
 }
 
 @keyframes starPop {
@@ -400,11 +437,12 @@ section h2 {
 
 /* Footer */
 footer {
-  background-color: var(--secondary);
+  background-color: var(--primary);
   color: white;
   text-align: center;
-  padding: 15px;
-  font-size: 0.9em;
+  padding: 25px;
+  font-size: 0.95em;
+  box-shadow: 0 -2px 10px rgba(0, 64, 128, 0.1);
 }
 
 footer a {
@@ -625,7 +663,7 @@ nav ul li a:hover {
 /* Header avec position relative */
 header {
   position: relative;
-  background: var(--secondary);
+  background: var(--primary);
   color: white;
   display: flex;
   justify-content: space-between;
@@ -865,7 +903,7 @@ button:hover
 
 /* Header admin */
 .admin-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--primary);
     color: white;
     padding: 30px;
     border-radius: 15px;
@@ -986,7 +1024,7 @@ button:hover
 
 .badge-info {
     background: #e3f2fd;
-    color: #2196f3;
+    color: var(--primary);  /* Au lieu de #2196f3 */
 }
 
 .badge-secondary {
@@ -1558,6 +1596,7 @@ button:hover
 
 @media (max-width: 768px) {
     .admin-header {
+        background: linear-gradient(135deg, var(--primary) 0%, #003366 100%);
         flex-direction: column;
         gap: 15px;
         text-align: center;

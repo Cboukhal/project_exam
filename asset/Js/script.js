@@ -61,79 +61,79 @@ $(document).ready(() => {
     }
 });
 
-const stars = document.querySelectorAll('.star');
-const ratingText = document.getElementById('ratingText');
-const noteValue = document.getElementById('note-value');
-const errorMessage = document.getElementById('errorMessage');
-const form = document.getElementById('commentForm');
-let selectedRating = 0;
+// const stars = document.querySelectorAll('.star');
+// const ratingText = document.getElementById('ratingText');
+// const noteValue = document.getElementById('note-value');
+// const errorMessage = document.getElementById('errorMessage');
+// const form = document.getElementById('commentForm');
+// let selectedRating = 0;
 
-const ratingLabels = {
-    1: "Très insatisfait",
-    2: "Insatisfait",
-    3: "Moyen",
-    4: "Satisfait",
-    5: "Excellent !"
-};
+// const ratingLabels = {
+//     1: "Très insatisfait",
+//     2: "Insatisfait",
+//     3: "Moyen",
+//     4: "Satisfait",
+//     5: "Excellent !"
+// };
 
-// Met à jour l'affichage des étoiles
-function updateStars(rating, isHover = false) {
-    stars.forEach((star, index) => {
-        if (index < rating) {
-            if (isHover) {
-                star.classList.add('hovered');
-            } else {
-                star.classList.add('active');
-                star.classList.remove('hovered');
-            }
-        } else {
-            star.classList.remove('active', 'hovered');
-        }
-    });
-}
+// // Met à jour l'affichage des étoiles
+// function updateStars(rating, isHover = false) {
+//     stars.forEach((star, index) => {
+//         if (index < rating) {
+//             if (isHover) {
+//                 star.classList.add('hovered');
+//             } else {
+//                 star.classList.add('active');
+//                 star.classList.remove('hovered');
+//             }
+//         } else {
+//             star.classList.remove('active', 'hovered');
+//         }
+//     });
+// }
 
-// Survol
-stars.forEach(star => {
-    star.addEventListener('mouseenter', () => {
-        const rating = parseInt(star.getAttribute('data-rating'));
-        updateStars(rating, true);
-        ratingText.textContent = ratingLabels[rating];
-    });
-});
+// // Survol
+// stars.forEach(star => {
+//     star.addEventListener('mouseenter', () => {
+//         const rating = parseInt(star.getAttribute('data-rating'));
+//         updateStars(rating, true);
+//         ratingText.textContent = ratingLabels[rating];
+//     });
+// });
 
-// Quand on quitte le survol
-document.getElementById('starRating').addEventListener('mouseleave', () => {
-    updateStars(selectedRating, false);
-    if (selectedRating === 0) {
-        ratingText.textContent = "Choisissez une note";
-    } else {
-        ratingText.textContent = ratingLabels[selectedRating];
-    }
-});
+// // Quand on quitte le survol
+// document.getElementById('starRating').addEventListener('mouseleave', () => {
+//     updateStars(selectedRating, false);
+//     if (selectedRating === 0) {
+//         ratingText.textContent = "Choisissez une note";
+//     } else {
+//         ratingText.textContent = ratingLabels[selectedRating];
+//     }
+// });
 
-// Au clic
-stars.forEach(star => {
-    star.addEventListener('click', () => {
-        selectedRating = parseInt(star.getAttribute('data-rating'));
-        noteValue.value = selectedRating;
-        updateStars(selectedRating, false);
-        ratingText.textContent = ratingLabels[selectedRating];
-        errorMessage.style.display = 'none';
-    });
-});
+// // Au clic
+// stars.forEach(star => {
+//     star.addEventListener('click', () => {
+//         selectedRating = parseInt(star.getAttribute('data-rating'));
+//         noteValue.value = selectedRating;
+//         updateStars(selectedRating, false);
+//         ratingText.textContent = ratingLabels[selectedRating];
+//         errorMessage.style.display = 'none';
+//     });
+// });
 
-// Validation du formulaire
-form.addEventListener('submit', (e) => {
-    if (selectedRating === 0) {
-        e.preventDefault();
-        errorMessage.style.display = 'block';
-        document.getElementById('starRating').scrollIntoView({ behavior: 'smooth' });
-    } else {
-        e.preventDefault();
-        alert(`Merci pour votre note de ${selectedRating}/5 étoiles !`);
-        // form.submit(); // Décommentez pour envoyer réellement
-    }
-});
+// // Validation du formulaire
+// form.addEventListener('submit', (e) => {
+//     if (selectedRating === 0) {
+//         e.preventDefault();
+//         errorMessage.style.display = 'block';
+//         document.getElementById('starRating').scrollIntoView({ behavior: 'smooth' });
+//     } else {
+//         e.preventDefault();
+//         alert(`Merci pour votre note de ${selectedRating}/5 étoiles !`);
+//         // form.submit(); // Décommentez pour envoyer réellement
+//     }
+// });
 
 /**
  * PANNEAU D'ADMINISTRATION - SCRIPTS
@@ -141,10 +141,12 @@ form.addEventListener('submit', (e) => {
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialisation
-    initTabs();
-    initAlerts();
-    initModals();
+    // ✅ Vérifier si on est sur une page admin/user avant d'initialiser
+    if (document.querySelector('.tab-button')) {
+        initTabs();
+        initAlerts();
+        initModals();
+    }
 });
 
 // ============================================
@@ -280,17 +282,21 @@ function updateDevisStatus(id, status) {
 // CONFIRMATION DE SUPPRESSION
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Ajouter confirmation pour tous les liens de suppression
-    const deleteLinks = document.querySelectorAll('a[href*="delete"]');
-    deleteLinks.forEach(link => {
-        if (!link.hasAttribute('onclick')) {
-            link.addEventListener('click', function(e) {
-                if (!confirm('Êtes-vous sûr de vouloir supprimer cet élément ?')) {
-                    e.preventDefault();
-                }
-            });
-        }
-    });
+    // ✅ Éviter de ré-exécuter si déjà fait
+    if (!window.deleteLinksInitialized) {
+        window.deleteLinksInitialized = true;
+        
+        const deleteLinks = document.querySelectorAll('a[href*="delete"]');
+        deleteLinks.forEach(link => {
+            if (!link.hasAttribute('onclick')) {
+                link.addEventListener('click', function(e) {
+                    if (!confirm('Êtes-vous sûr de vouloir supprimer cet élément ?')) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
+    }
 });
 
 // ============================================
@@ -511,7 +517,7 @@ document.addEventListener('keydown', function(e) {
     // CTRL/CMD + S pour sauvegarder (prévenir le comportement par défaut)
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        const submitBtn = document.querySelector('form button[type="submit"]');
+        const submitBtn = document.querySelector('form button[type="submit"]:not([name="envoyer_commentaire"])');
         if (submitBtn) {
             showNotification('Formulaire envoyé', 'info');
             submitBtn.click();

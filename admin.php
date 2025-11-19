@@ -339,7 +339,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <!-- Header -->
             <div class="admin-header">
                 <div>
-                    <h1>👨‍💼 Panneau d'administration</h1>
+                    <h1>Panneau d'administration</h1>
                     <p>Bienvenue <?php echo htmlspecialchars($admin['prenom'] . ' ' . $admin['nom']); ?></p>
                 </div>
                 <div class="header-actions">
