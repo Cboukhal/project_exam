@@ -1465,7 +1465,7 @@ button:hover
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    background: var(--primary);
     color: white;
     padding: 15px;
     transform: translateY(100%);
