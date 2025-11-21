@@ -564,7 +564,7 @@ $stats = [
             <!-- ONGLET NOUVEAU AVIS -->
             <div id="nouveau-avis" class="tab-content">
                 <div class="card">
-                    <h3>⭐ Laisser un avis sur nos services</h3>
+                    <h3>Laisser un avis sur nos services</h3>
                     <form method="post" action="./user.php" class="user-form">
                         <div class="form-group">
                             <label>Votre note *</label>
