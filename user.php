@@ -1,162 +1,167 @@
 <?php
 session_start();
+include_once "./includes/connexionbdd.php";
 date_default_timezone_set('Europe/Paris');
 
 // Configuration
 define('SITE_TITLE', 'Thierry Decramp - SECIC');
 
 // Vérifier si l'utilisateur est connecté
-if (!isset($_SESSION['connexion']) || $_SESSION['connexion'] !== true || !isset($_SESSION['id'])) {
-    $_SESSION['flash_error'] = "Vous devez être connecté pour accéder à cette page.";
-    header("Location: ./connexion.php");
-    exit;
-}
-
-include_once "./includes/connexionbdd.php";
+if (!isset($_SESSION['connexion']) || $_SESSION['connexion'] !== true || !isset($_SESSION['id']))
+    {
+        $_SESSION['flash_error'] = "Vous devez être connecté pour accéder à cette page.";
+        header("Location: ./connexion.php");
+        exit;
+    }
 
 $user_id = $_SESSION['id'];
 
 // Récupérer les informations de l'utilisateur
-try {
+try
+    {
     $sql = "SELECT * FROM users WHERE id = :id";
     $stmt = $connexion->prepare($sql);
     $stmt->bindValue(":id", $user_id, PDO::PARAM_INT);
     $stmt->execute();
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$user) {
-        session_destroy();
-        header("Location: ./connexion.php");
-        exit;
+    if (!$user)
+        {
+            session_destroy();
+            header("Location: ./connexion.php");
+            exit;
+        }
     }
-} catch(PDOException $e) {
-    error_log("Erreur récupération utilisateur : " . $e->getMessage());
-    die("Erreur système");
-}
+catch(PDOException $e)
+    {
+        error_log("Erreur récupération utilisateur : " . $e->getMessage());
+        die("Erreur système");
+    }
 
 // ========== TRAITEMENT MODIFICATION PROFIL ==========
-if (!empty($_POST["modifier_profil"])) {
-    $civilite = trim($_POST["civilite"]);
-    $prenom = trim(strip_tags($_POST["prenom"]));
-    $nom = trim(strip_tags($_POST["nom"]));
-    $email = trim(strtolower($_POST["email"]));
-    
-    if (strlen($prenom) < 2 || strlen($prenom) > 50) {
-        $_SESSION['flash_error'] = "Le prénom doit contenir entre 2 et 50 caractères.";
-    }
-    elseif (strlen($nom) < 2 || strlen($nom) > 50) {
-        $_SESSION['flash_error'] = "Le nom doit contenir entre 2 et 50 caractères.";
-    }
-    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $_SESSION['flash_error'] = "L'adresse email n'est pas valide.";
-    }
-    else {
-        try {
-            $sql = "SELECT id FROM users WHERE mail = :email AND id != :user_id";
-            $stmt = $connexion->prepare($sql);
-            $stmt->bindValue(":email", $email);
-            $stmt->bindValue(":user_id", $user_id, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            if ($stmt->fetch()) {
-                $_SESSION['flash_error'] = "Cette adresse email est déjà utilisée.";
-            } else {
-                $sql = "UPDATE users SET civilite = :civilite, prenom = :prenom, nom = :nom, mail = :email WHERE id = :user_id";
-                $stmt = $connexion->prepare($sql);
-                $stmt->bindValue(":civilite", $civilite);
-                $stmt->bindValue(":prenom", $prenom);
-                $stmt->bindValue(":nom", $nom);
-                $stmt->bindValue(":email", $email);
-                $stmt->bindValue(":user_id", $user_id, PDO::PARAM_INT);
-                $stmt->execute();
-                
-                $_SESSION['flash_success'] = "Profil modifié avec succès !";
-                $_SESSION['prenom'] = $prenom;
-                $_SESSION['nom'] = $nom;
-                $_SESSION['email'] = $email;
-                
-                $user['civilite'] = $civilite;
-                $user['prenom'] = $prenom;
-                $user['nom'] = $nom;
-                $user['mail'] = $email;
+if (!empty($_POST["modifier_profil"]))
+    {
+        $civilite = trim($_POST["civilite"]);
+        $prenom = trim(strip_tags($_POST["prenom"]));
+        $nom = trim(strip_tags($_POST["nom"]));
+        $email = trim(strtolower($_POST["email"]));
+        if (strlen($prenom) < 2 || strlen($prenom) > 50)
+                $_SESSION['flash_error'] = "Le prénom doit contenir entre 2 et 50 caractères.";
+        elseif (strlen($nom) < 2 || strlen($nom) > 50) 
+            $_SESSION['flash_error'] = "Le nom doit contenir entre 2 et 50 caractères.";
+        elseif (!filter_var($email, FILTER_VALIDATE_EMAIL))
+            $_SESSION['flash_error'] = "L'adresse email n'est pas valide.";
+        else
+            {
+                try
+                    {
+                        $sql = "SELECT id FROM users WHERE mail = :email AND id != :user_id";
+                        $stmt = $connexion->prepare($sql);
+                        $stmt->bindValue(":email", $email);
+                        $stmt->bindValue(":user_id", $user_id, PDO::PARAM_INT);
+                        $stmt->execute();
+                        if ($stmt->fetch())
+                            $_SESSION['flash_error'] = "Cette adresse email est déjà utilisée.";
+                        else
+                            {
+                                $sql = "UPDATE users SET civilite = :civilite, prenom = :prenom, nom = :nom, mail = :email WHERE id = :user_id";
+                                $stmt = $connexion->prepare($sql);
+                                $stmt->bindValue(":civilite", $civilite);
+                                $stmt->bindValue(":prenom", $prenom);
+                                $stmt->bindValue(":nom", $nom);
+                                $stmt->bindValue(":email", $email);
+                                $stmt->bindValue(":user_id", $user_id, PDO::PARAM_INT);
+                                $stmt->execute();
+                                
+                                $_SESSION['flash_success'] = "Profil modifié avec succès !";
+                                $_SESSION['prenom'] = $prenom;
+                                $_SESSION['nom'] = $nom;
+                                $_SESSION['email'] = $email;
+                                
+                                $user['civilite'] = $civilite;
+                                $user['prenom'] = $prenom;
+                                $user['nom'] = $nom;
+                                $user['mail'] = $email;
+                            }
+                    }
+                    catch(PDOException $e)
+                    {
+                        error_log("Erreur modification profil : " . $e->getMessage());
+                        $_SESSION['flash_error'] = "Une erreur est survenue.";
+                    }
             }
-        } catch(PDOException $e) {
-            error_log("Erreur modification profil : " . $e->getMessage());
-            $_SESSION['flash_error'] = "Une erreur est survenue.";
-        }
+        header("Location: ./user.php#profil");
+        exit;
     }
-    
-    header("Location: ./user.php#profil");
-    exit;
-}
 
 // ========== TRAITEMENT CHANGEMENT MOT DE PASSE ==========
-if (!empty($_POST["changer_mdp"])) {
-    $ancien_mdp = $_POST["ancien_mdp"];
-    $nouveau_mdp = $_POST["nouveau_mdp"];
-    $confirmer_mdp = $_POST["confirmer_mdp"];
-    
-    if (!password_verify($ancien_mdp, $user['mdp'])) {
-        $_SESSION['flash_error'] = "L'ancien mot de passe est incorrect.";
+if (!empty($_POST["changer_mdp"]))
+    {
+        $ancien_mdp = $_POST["ancien_mdp"];
+        $nouveau_mdp = $_POST["nouveau_mdp"];
+        $confirmer_mdp = $_POST["confirmer_mdp"];
+        if (!password_verify($ancien_mdp, $user['mdp'])) 
+            $_SESSION['flash_error'] = "L'ancien mot de passe est incorrect.";
+        elseif (strlen($nouveau_mdp) < 8) 
+            $_SESSION['flash_error'] = "Le nouveau mot de passe doit contenir au moins 8 caractères.";
+        elseif ($nouveau_mdp !== $confirmer_mdp) 
+            $_SESSION['flash_error'] = "Les mots de passe ne correspondent pas.";
+        else
+            {
+                try
+                    {
+                        $mdp_hash = password_hash($nouveau_mdp, PASSWORD_DEFAULT);
+                        $sql = "UPDATE users SET mdp = :mdp WHERE id = :user_id";
+                        $stmt = $connexion->prepare($sql);
+                        $stmt->bindValue(":mdp", $mdp_hash);
+                        $stmt->bindValue(":user_id", $user_id, PDO::PARAM_INT);
+                        $stmt->execute();
+                        
+                        $_SESSION['flash_success'] = "Mot de passe modifié avec succès !";
+                    } 
+                catch(PDOException $e)
+                    {
+                        error_log("Erreur changement mot de passe : " . $e->getMessage());
+                        $_SESSION['flash_error'] = "Une erreur est survenue.";
+                    }
+            }
+        header("Location: ./user.php#profil");
+        exit;
     }
-    elseif (strlen($nouveau_mdp) < 8) {
-        $_SESSION['flash_error'] = "Le nouveau mot de passe doit contenir au moins 8 caractères.";
-    }
-    elseif ($nouveau_mdp !== $confirmer_mdp) {
-        $_SESSION['flash_error'] = "Les mots de passe ne correspondent pas.";
-    }
-    else {
-        try {
-            $mdp_hash = password_hash($nouveau_mdp, PASSWORD_DEFAULT);
-            $sql = "UPDATE users SET mdp = :mdp WHERE id = :user_id";
-            $stmt = $connexion->prepare($sql);
-            $stmt->bindValue(":mdp", $mdp_hash);
-            $stmt->bindValue(":user_id", $user_id, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            $_SESSION['flash_success'] = "Mot de passe modifié avec succès !";
-        } catch(PDOException $e) {
-            error_log("Erreur changement mot de passe : " . $e->getMessage());
-            $_SESSION['flash_error'] = "Une erreur est survenue.";
-        }
-    }
-    
-    header("Location: ./user.php#profil");
-    exit;
-}
 
 // ========== TRAITEMENT COMMENTAIRE ==========
-if (!empty($_POST["envoyer_commentaire"])) {
-    $note = intval($_POST["note"]);
-    $commentaire = htmlspecialchars(trim($_POST["commentaire"]));
-    
-    if ($note < 1 || $note > 5) {
-        $_SESSION['flash_error'] = "La note doit être entre 1 et 5 étoiles.";
+if (!empty($_POST["envoyer_commentaire"]))
+    {
+        $note = intval($_POST["note"]);
+        $commentaire = htmlspecialchars(trim($_POST["commentaire"]));
+        
+        if ($note < 1 || $note > 5) 
+            $_SESSION['flash_error'] = "La note doit être entre 1 et 5 étoiles.";
+        elseif (strlen($commentaire) < 10 || strlen($commentaire) > 500)
+            $_SESSION['flash_error'] = "Le commentaire doit contenir entre 10 et 500 caractères.";
+        else 
+            {
+                try
+                    {
+                        $sql = "INSERT INTO commentaire (pseudo, email, note, commentaire, approved, date_creation) 
+                                VALUES (:pseudo, :email, :note, :commentaire, 0, NOW())";
+                        $stmt = $connexion->prepare($sql);
+                        $stmt->bindValue(":pseudo", $user['prenom'] . ' ' . $user['nom']);
+                        $stmt->bindValue(":email", $user['mail']);
+                        $stmt->bindValue(":note", $note, PDO::PARAM_INT);
+                        $stmt->bindValue(":commentaire", $commentaire);
+                        $stmt->execute();
+                        
+                        $_SESSION['flash_success'] = "Merci pour votre avis ! Il sera visible après modération.";
+                    } 
+                    catch(PDOException $e) 
+                    {
+                        error_log("Erreur insertion commentaire : " . $e->getMessage());
+                        $_SESSION['flash_error'] = "Une erreur est survenue.";
+                    }
+            }
+        header("Location: ./user.php#nouveau-avis");
+        exit;
     }
-    elseif (strlen($commentaire) < 10 || strlen($commentaire) > 500) {
-        $_SESSION['flash_error'] = "Le commentaire doit contenir entre 10 et 500 caractères.";
-    }
-    else {
-        try {
-            $sql = "INSERT INTO commentaire (pseudo, email, note, commentaire, approved, date_creation) 
-                    VALUES (:pseudo, :email, :note, :commentaire, 0, NOW())";
-            $stmt = $connexion->prepare($sql);
-            $stmt->bindValue(":pseudo", $user['prenom'] . ' ' . $user['nom']);
-            $stmt->bindValue(":email", $user['mail']);
-            $stmt->bindValue(":note", $note, PDO::PARAM_INT);
-            $stmt->bindValue(":commentaire", $commentaire);
-            $stmt->execute();
-            
-            $_SESSION['flash_success'] = "Merci pour votre avis ! Il sera visible après modération.";
-        } catch(PDOException $e) {
-            error_log("Erreur insertion commentaire : " . $e->getMessage());
-            $_SESSION['flash_error'] = "Une erreur est survenue.";
-        }
-    }
-    
-    header("Location: ./user.php#nouveau-avis");
-    exit;
-}
 
 // ========== TRAITEMENT DEMANDE DE DEVIS ==========
 if (!empty($_POST["envoyer_devis"])) {
