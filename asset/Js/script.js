@@ -61,79 +61,122 @@ $(document).ready(() => {
     }
 });
 
-// const stars = document.querySelectorAll('.star');
-// const ratingText = document.getElementById('ratingText');
-// const noteValue = document.getElementById('note-value');
-// const errorMessage = document.getElementById('errorMessage');
-// const form = document.getElementById('commentForm');
-// let selectedRating = 0;
+// ----------------------------------------------------------------------------------------------------
+// ============================================
+// SYSTÈME DE NOTATION PAR ÉTOILES - CORRIGÉ
+// ============================================
 
-// const ratingLabels = {
-//     1: "Très insatisfait",
-//     2: "Insatisfait",
-//     3: "Moyen",
-//     4: "Satisfait",
-//     5: "Excellent !"
-// };
+document.addEventListener('DOMContentLoaded', function() {
+    // ✅ Vérifier que les éléments existent avant d'initialiser
+    const starRatingContainer = document.getElementById('starRating');
+    const commentForm = document.getElementById('commentForm');
+    
+    if (starRatingContainer && commentForm) {
+        initStarRating();
+    }
+});
 
-// // Met à jour l'affichage des étoiles
-// function updateStars(rating, isHover = false) {
-//     stars.forEach((star, index) => {
-//         if (index < rating) {
-//             if (isHover) {
-//                 star.classList.add('hovered');
-//             } else {
-//                 star.classList.add('active');
-//                 star.classList.remove('hovered');
-//             }
-//         } else {
-//             star.classList.remove('active', 'hovered');
-//         }
-//     });
-// }
+function initStarRating() {
+    const stars = document.querySelectorAll('.star');
+    const ratingText = document.getElementById('ratingText');
+    const noteValue = document.getElementById('note-value');
+    const errorMessage = document.getElementById('errorMessage');
+    const form = document.getElementById('commentForm');
+    
+    // ✅ Vérification que tous les éléments existent
+    if (!stars.length || !ratingText || !noteValue || !form) {
+        console.error('Éléments manquants pour le système de notation');
+        return;
+    }
+    
+    let selectedRating = 0;
 
-// // Survol
-// stars.forEach(star => {
-//     star.addEventListener('mouseenter', () => {
-//         const rating = parseInt(star.getAttribute('data-rating'));
-//         updateStars(rating, true);
-//         ratingText.textContent = ratingLabels[rating];
-//     });
-// });
+    const ratingLabels = {
+        1: "Très insatisfait",
+        2: "Insatisfait",
+        3: "Moyen",
+        4: "Satisfait",
+        5: "Excellent !"
+    };
 
-// // Quand on quitte le survol
-// document.getElementById('starRating').addEventListener('mouseleave', () => {
-//     updateStars(selectedRating, false);
-//     if (selectedRating === 0) {
-//         ratingText.textContent = "Choisissez une note";
-//     } else {
-//         ratingText.textContent = ratingLabels[selectedRating];
-//     }
-// });
+    // Met à jour l'affichage des étoiles
+    function updateStars(rating, isHover = false) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                if (isHover) {
+                    star.classList.add('hovered');
+                    star.classList.remove('active');
+                } else {
+                    star.classList.add('active');
+                    star.classList.remove('hovered');
+                }
+            } else {
+                star.classList.remove('active', 'hovered');
+            }
+        });
+    }
 
-// // Au clic
-// stars.forEach(star => {
-//     star.addEventListener('click', () => {
-//         selectedRating = parseInt(star.getAttribute('data-rating'));
-//         noteValue.value = selectedRating;
-//         updateStars(selectedRating, false);
-//         ratingText.textContent = ratingLabels[selectedRating];
-//         errorMessage.style.display = 'none';
-//     });
-// });
+    // Survol des étoiles
+    stars.forEach(star => {
+        star.addEventListener('mouseenter', () => {
+            const rating = parseInt(star.getAttribute('data-rating'));
+            updateStars(rating, true);
+            ratingText.textContent = ratingLabels[rating];
+        });
+    });
 
-// // Validation du formulaire
-// form.addEventListener('submit', (e) => {
-//     if (selectedRating === 0) {
-//         e.preventDefault();
-//         errorMessage.style.display = 'block';
-//         document.getElementById('starRating').scrollIntoView({ behavior: 'smooth' });
-//     } else {
-//         e.preventDefault();
-//         alert(`Merci pour votre note de ${selectedRating}/5 étoiles !`);
-//         // form.submit(); // Décommentez pour envoyer réellement
-//     }
-// });
+    // Quand on quitte le survol - CORRECTION ICI
+    const starRatingContainer = document.getElementById('starRating');
+    if (starRatingContainer) {
+        starRatingContainer.addEventListener('mouseleave', () => {
+            updateStars(selectedRating, false);
+            if (selectedRating === 0) {
+                ratingText.textContent = "Choisissez une note";
+            } else {
+                ratingText.textContent = ratingLabels[selectedRating];
+            }
+        });
+    }
+
+    // Au clic - Sélection de la note
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            selectedRating = parseInt(star.getAttribute('data-rating'));
+            noteValue.value = selectedRating;
+            updateStars(selectedRating, false);
+            ratingText.textContent = ratingLabels[selectedRating];
+            
+            // ✅ Masquer le message d'erreur si présent
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+        });
+    });
+
+    // Validation du formulaire
+    form.addEventListener('submit', (e) => {
+        if (selectedRating === 0) {
+            e.preventDefault();
+            
+            // ✅ Afficher le message d'erreur
+            if (errorMessage) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = '⚠️ Veuillez sélectionner une note avant de soumettre';
+            }
+            
+            // ✅ Scroll vers les étoiles
+            starRatingContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }
+        // Si note sélectionnée, le formulaire se soumet normalement
+    });
+
+    // ✅ Initialisation : afficher le message par défaut
+    ratingText.textContent = "Choisissez une note";
+}
+// ----------------------------------------------------------------------------------------------------
 
 /**
  * PANNEAU D'ADMINISTRATION - SCRIPTS
@@ -528,6 +571,28 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         const modals = document.querySelectorAll('.modal.show');
         modals.forEach(modal => modal.classList.remove('show'));
+    }
+});
+
+// Compteur de caractères pour le devis
+document.addEventListener('DOMContentLoaded', function() {
+    const messageDevisTextarea = document.getElementById('message_devis');
+    const charCountDevis = document.getElementById('charCountDevis');
+    
+    if (messageDevisTextarea && charCountDevis) {
+        messageDevisTextarea.addEventListener('input', function() {
+            const count = this.value.length;
+            charCountDevis.textContent = count;
+            
+            // Changer la couleur selon la longueur
+            if (count < 20) {
+                charCountDevis.style.color = '#f44336'; // Rouge
+            } else if (count > 900) {
+                charCountDevis.style.color = '#ff9800'; // Orange
+            } else {
+                charCountDevis.style.color = '#4caf50'; // Vert
+            }
+        });
     }
 });
 

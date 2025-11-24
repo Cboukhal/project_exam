@@ -136,7 +136,7 @@
                 <?php foreach($commentaires as $com): ?>
                     <div class="temoignage-card">
                         <div class="temoignage-header">
-                            <span class="temoignage-stars">
+                            <span class="temoignage-stars" >
                                 <?php 
                                 for($i = 1; $i <= 5; $i++) {
                                     echo $i <= $com['note'] ? '★' : '☆';

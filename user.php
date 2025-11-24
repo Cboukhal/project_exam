@@ -158,6 +158,55 @@ if (!empty($_POST["envoyer_commentaire"])) {
     exit;
 }
 
+// ========== TRAITEMENT DEMANDE DE DEVIS ==========
+if (!empty($_POST["envoyer_devis"])) {
+    $type_client = trim($_POST["type_client"]);
+    $contact_name = htmlspecialchars(trim($_POST["contact_name"]));
+    $email = trim($_POST["email"]);
+    $phone = htmlspecialchars(trim($_POST["phone"]));
+    $message_devis = htmlspecialchars(trim($_POST["message_devis"]));
+    
+    // Validation
+    if (empty($type_client) || !in_array($type_client, ['Particulier', 'Professionnel'])) {
+        $_SESSION['flash_error'] = "Veuillez sélectionner un type de client.";
+    }
+    elseif (strlen($contact_name) < 2 || strlen($contact_name) > 200) {
+        $_SESSION['flash_error'] = "Le nom doit contenir entre 2 et 200 caractères.";
+    }
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['flash_error'] = "L'adresse email n'est pas valide.";
+    }
+    elseif (!empty($phone) && strlen($phone) > 50) {
+        $_SESSION['flash_error'] = "Le numéro de téléphone est trop long.";
+    }
+    elseif (strlen($message_devis) < 20 || strlen($message_devis) > 1000) {
+        $_SESSION['flash_error'] = "Le message doit contenir entre 20 et 1000 caractères.";
+    }
+    else {
+        try {
+            $sql = "INSERT INTO requete_devis 
+                    (Professionnels_Particuliers, contact_name, email, phone, message, status, date_creation) 
+                    VALUES (:type_client, :contact_name, :email, :phone, :message, 'new', NOW())";
+            
+            $stmt = $connexion->prepare($sql);
+            $stmt->bindValue(":type_client", $type_client);
+            $stmt->bindValue(":contact_name", $contact_name);
+            $stmt->bindValue(":email", $email);
+            $stmt->bindValue(":phone", $phone);
+            $stmt->bindValue(":message", $message_devis);
+            $stmt->execute();
+            
+            $_SESSION['flash_success'] = "✓ Votre demande de devis a été envoyée ! Nous vous contacterons rapidement.";
+        } catch(PDOException $e) {
+            error_log("Erreur insertion devis : " . $e->getMessage());
+            $_SESSION['flash_error'] = "Une erreur est survenue lors de l'envoi.";
+        }
+    }
+    
+    header("Location: ./user.php#demander-devis");
+    exit;
+}
+
 // ========== TRAITEMENT SUPPRESSION COMPTE ==========
 if (!empty($_POST["supprimer_compte"])) {
     $confirmation = $_POST["confirmation"] ?? '';
@@ -345,10 +394,11 @@ $stats = [
 
             <!-- Onglets -->
             <div class="tabs">
-                <button class="tab-button active" data-tab="profil">👤 Mon Profil</button>
-                <button class="tab-button" data-tab="historique">📜 Historique</button>
-                <button class="tab-button" data-tab="commentaires">💬 Mes Avis</button>
-                <button class="tab-button" data-tab="nouveau-avis">⭐ Laisser un avis</button>
+                <button class="tab-button active" data-tab="profil">Mon Profil</button>
+                <button class="tab-button" data-tab="demander-devis">Demander un devis</button>
+                <button class="tab-button" data-tab="historique">Historique</button>
+                <button class="tab-button" data-tab="commentaires">Mes Avis</button>
+                <button class="tab-button" data-tab="nouveau-avis">Laisser un avis</button>
             </div>
 
             <!-- ONGLET PROFIL -->
@@ -436,50 +486,91 @@ $stats = [
                 </div>
             </div>
 
-            <!-- ONGLET HISTORIQUE -->
-            <div id="historique" class="tab-content">
+            <!-- ONGLET DEMANDER UN DEVIS -->
+            <div id="demander-devis" class="tab-content">
                 <div class="card">
-                    <h3>📧 Mes demandes de contact (<?= count($historique_contacts) ?>)</h3>
-                    <?php if (empty($historique_contacts)): ?>
-                        <div class="empty-state">
-                            <div class="empty-icon">📭</div>
-                            <p>Aucune demande de contact pour le moment</p>
-                            <a href="./contact.php" class="btn">Nous contacter</a>
+                    <h3>📋 Demander un devis personnalisé</h3>
+                    <p class="form-intro">
+                        Remplissez ce formulaire pour obtenir un devis adapté à vos besoins. 
+                        Notre équipe vous répondra dans les plus brefs délais.
+                    </p>
+                    
+                    <form method="post" action="./user.php" class="user-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="type_client">Type de client *</label>
+                                <select id="type_client" name="type_client" required>
+                                    <option value="">-- Sélectionnez --</option>
+                                    <option value="Particulier">🏠 Particulier</option>
+                                    <option value="Professionnel">🏢 Professionnel</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="contact_name">Nom complet *</label>
+                                <input type="text" 
+                                    id="contact_name" 
+                                    name="contact_name" 
+                                    value="<?= htmlspecialchars($user['prenom'] . ' ' . $user['nom']) ?>"
+                                    required 
+                                    minlength="2" 
+                                    maxlength="200"
+                                    placeholder="Prénom Nom">
+                            </div>
                         </div>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="user-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Sujet</th>
-                                        <th>Message</th>
-                                        <th>Statut</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($historique_contacts as $contact): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($contact['date_fr']) ?></td>
-                                        <td><strong><?= htmlspecialchars($contact['sujet'] ?? 'Sans sujet') ?></strong></td>
-                                        <td class="text-truncate"><?= htmlspecialchars(substr($contact['message'], 0, 60)) ?>...</td>
-                                        <td>
-                                            <span class="status-badge status-<?= $contact['status'] ?>">
-                                                <?php
-                                                $statuts = ['new' => '🆕 Nouveau', 'read' => '📖 Lu', 'closed' => '✅ Traité'];
-                                                echo $statuts[$contact['status']] ?? $contact['status'];
-                                                ?>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email de contact *</label>
+                                <input type="email" 
+                                    id="email" 
+                                    name="email" 
+                                    value="<?= htmlspecialchars($user['mail']) ?>"
+                                    required
+                                    placeholder="votre@email.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Téléphone (optionnel)</label>
+                                <input type="tel" 
+                                    id="phone" 
+                                    name="phone" 
+                                    maxlength="50"
+                                    placeholder="06 12 34 56 78">
+                            </div>
                         </div>
-                    <?php endif; ?>
-                </div>
+                        
+                        <div class="form-group">
+                            <label for="message_devis">Décrivez votre projet * (20-1000 caractères)</label>
+                            <textarea id="message_devis" 
+                                    name="message_devis" 
+                                    rows="8" 
+                                    required 
+                                    minlength="20" 
+                                    maxlength="1000"
+                                    placeholder="Décrivez votre projet en détail : type de travaux, surface, délais souhaités, budget indicatif, etc."></textarea>
+                            <div class="char-counter">
+                                Caractères : <span id="charCountDevis">0</span> / 1000
+                            </div>
+                        </div>
+                        
+                        <div class="form-info">
+                            <strong>Informations :</strong>
+                            <ul>
+                                <li>Toutes vos demandes sont consultables dans l'onglet "Historique"</li>
+                                <li>Nous nous engageons à vous répondre sous 48h ouvrées</li>
+                                <li>Vos données sont sécurisées et ne seront jamais partagées</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" name="envoyer_devis" value="1" class="btn btn-primary">
+                                📤 Envoyer ma demande
+                            </button>
+                        </div>
+                    </form>
 
-                <div class="card">
+                    <div class="card">
                     <h3>📄 Mes demandes de devis (<?= count($historique_devis) ?>)</h3>
                     <?php if (empty($historique_devis)): ?>
                         <div class="empty-state">
@@ -518,12 +609,16 @@ $stats = [
                         </div>
                     <?php endif; ?>
                 </div>
+
+                </div>
+                </div>
             </div>
+        <!-- </div> -->
 
             <!-- ONGLET MES AVIS -->
             <div id="commentaires" class="tab-content">
                 <div class="card">
-                    <h3>⭐ Mes avis laissés (<?= count($mes_commentaires) ?>)</h3>
+                    <h3>Mes avis laissés (<?= count($mes_commentaires) ?>)</h3>
                     <?php if (empty($mes_commentaires)): ?>
                         <div class="empty-state">
                             <div class="empty-icon">💭</div>
@@ -537,7 +632,7 @@ $stats = [
                                 <div class="comment-header">
                                     <div class="comment-stars">
                                         <?php for($i=0; $i<5; $i++): ?>
-                                            <span class="star <?= $i < $com['note'] ? 'active' : '' ?>">★</span>
+                                            <span class="star-display <?= $i < $com['note'] ? 'filled' : '' ?>">★</span>
                                         <?php endfor; ?>
                                     </div>
                                     <div class="comment-meta">
@@ -591,9 +686,9 @@ $stats = [
                             </div>
                         </div>
                         
-                        <div class="form-actions">
+                        <div class="form-actions" id="commentForm">
                             <button type="submit" name="envoyer_commentaire" value="1" class="btn btn-primary">
-                                📤 Publier mon avis
+                                Publier mon avis
                             </button>
                         </div>
                     </form>
@@ -629,6 +724,8 @@ $stats = [
             </form>
         </div>
     </div>
+
+
 
     <?php include "./includes/footer.php"; ?>
 

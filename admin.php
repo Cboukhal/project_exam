@@ -429,28 +429,27 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
             <!-- Onglets -->
             <div class="tabs">
-                <button class="tab-button active" data-tab="dashboard">📊 Dashboard</button>
-                <button class="tab-button" data-tab="services">📋 Services</button>
+                <button class="tab-button active" data-tab="dashboard">Dashboard</button>
                 <button class="tab-button" data-tab="commentaires">
-                    💬 Commentaires
+                    Commentaires
                     <?php if ($stats['commentaires_attente'] > 0): ?>
                         <span class="tab-badge"><?= $stats['commentaires_attente'] ?></span>
                     <?php endif; ?>
                 </button>
-                <button class="tab-button" data-tab="galeries">🖼️ Galeries</button>
+                <button class="tab-button" data-tab="galeries">Galeries</button>
                 <button class="tab-button" data-tab="contacts">
-                    📧 Contacts
+                    Contacts
                     <?php if ($stats['contacts_nouveaux'] > 0): ?>
                         <span class="tab-badge"><?= $stats['contacts_nouveaux'] ?></span>
                     <?php endif; ?>
                 </button>
                 <button class="tab-button" data-tab="devis">
-                    📄 Devis
+                    Devis
                     <?php if ($stats['devis_nouveaux'] > 0): ?>
                         <span class="tab-badge"><?= $stats['devis_nouveaux'] ?></span>
                     <?php endif; ?>
                 </button>
-                <button class="tab-button" data-tab="utilisateurs">👥 Utilisateurs</button>
+                <button class="tab-button" data-tab="utilisateurs">Utilisateurs</button>
             </div>
 
             <!-- ONGLET DASHBOARD -->
@@ -504,81 +503,6 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                                 </div>
                             <?php endif; ?>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ONGLET SERVICES -->
-            <div id="services" class="tab-content">
-                <div class="card">
-                    <h3>➕ Ajouter un nouveau service</h3>
-                    <form method="POST" class="admin-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="title">Titre *</label>
-                                <input type="text" id="title" name="title" required placeholder="Ex: Installation électrique">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="categorie">Catégorie *</label>
-                                <select id="categorie" name="categorie" required>
-                                    <option value="particulier">Particulier</option>
-                                    <option value="professionnel">Professionnel</option>
-                                    <option value="autre">Autre</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="description">Description</label>
-                            <textarea id="description" name="description" rows="4" placeholder="Description détaillée du service..."></textarea>
-                        </div>
-                        
-                        <button type="submit" name="ajouter_service" value="1" class="btn btn-primary">
-                            ➕ Ajouter le service
-                        </button>
-                    </form>
-                </div>
-
-                <div class="card">
-                    <h3>📋 Liste des services (<?= count($services) ?>)</h3>
-                    <div class="table-responsive">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Titre</th>
-                                    <th>Slug</th>
-                                    <th>Description</th>
-                                    <th>Catégorie</th>
-                                    <th>Date création</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($services as $service): ?>
-                                <tr>
-                                    <td><?= $service['id'] ?></td>
-                                    <td><strong><?= htmlspecialchars($service['title']) ?></strong></td>
-                                    <td><code><?= htmlspecialchars($service['slug']) ?></code></td>
-                                    <td><?= htmlspecialchars(substr($service['description'] ?? '', 0, 60)) ?>...</td>
-                                    <td><span class="badge badge-<?= $service['categorie'] ?>"><?= htmlspecialchars($service['categorie']) ?></span></td>
-                                    <td><?= date('d/m/Y', strtotime($service['date_creation'])) ?></td>
-                                    <td>
-                                        <button class="btn-icon btn-edit" onclick="editService(<?= htmlspecialchars(json_encode($service)) ?>)" title="Modifier">
-                                            ✏️
-                                        </button>
-                                        <a href="?delete_service=<?= $service['id'] ?>" 
-                                           class="btn-icon btn-delete" 
-                                           onclick="return confirm('Supprimer ce service ?')"
-                                           title="Supprimer">
-                                            🗑️
-                                        </a>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>

@@ -1465,7 +1465,7 @@ button:hover
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--primary);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
     color: white;
     padding: 15px;
     transform: translateY(100%);
@@ -1682,7 +1682,7 @@ button:hover
         }
         
         .auth-side.left {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary);
             color: white;
             display: flex;
             flex-direction: column;
@@ -1873,5 +1873,69 @@ button:hover
                 grid-template-columns: 1fr;
             }
         }
+.star {
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.2s;
+}
 
-        
+.star.hovered {
+    color: #ffc107;
+    transform: scale(1.2);
+}
+
+.star.active {
+    color: #ff9800;
+}
+
+#ratingText {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #555;
+}
+
+/* Étoiles affichées dans les commentaires (lecture seule) */
+.comment-stars {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 10px;
+}
+
+.star-display {
+    font-size: 1.2rem;
+    color: #ddd;
+    transition: none;
+}
+
+.star-display.filled {
+    color: #ffc107;
+}
+
+/* Étoiles interactives dans le formulaire */
+.stars-input {
+    display: flex;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.stars-input .star {
+    font-size: 2.5rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.stars-input .star:hover {
+    transform: scale(1.1);
+}
+
+.stars-input .star.hovered {
+    color: #ffc107;
+    transform: scale(1.2);
+}
+
+.stars-input .star.active {
+    color: #ff9800;
+}
