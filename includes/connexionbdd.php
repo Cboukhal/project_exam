@@ -37,6 +37,8 @@
             mail VARCHAR(100) UNIQUE NOT NULL,
             mdp VARCHAR(255) NOT NULL,
             `role` VARCHAR(20),
+            reset_token VARCHAR(64) DEFAULT NULL,
+            reset_token_expires DATETIME DEFAULT NULL,
             date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8 COLLATE utf8_bin";
         $connexion->exec($sql);
