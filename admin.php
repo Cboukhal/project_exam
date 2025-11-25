@@ -22,6 +22,76 @@ if (!isset($connexion)) {
     die("Erreur: connexion à la BDD introuvable.");
 }
 
+// ========== GESTION DES PARTENAIRES ==========
+if (isset($_POST['ajouter_partenaire'])) {
+    $nom = trim($_POST['nom'] ?? '');
+    $url = trim($_POST['url'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+
+    // validations simples
+    if ($nom === '' || $url === '') {
+        $_SESSION['flash_error'] = "Le nom et l'URL sont requis.";
+    } elseif (!filter_var($url, FILTER_VALIDATE_URL)) {
+        $_SESSION['flash_error'] = "L'URL fournie n'est pas valide.";
+    } else {
+        try {
+            $stmt = $connexion->prepare("INSERT INTO partenaire (nom, `url`, `description`) VALUES (:nom, :url, :description)");
+            $stmt->bindValue(':nom', $nom, PDO::PARAM_STR);
+            $stmt->bindValue(':url', $url, PDO::PARAM_STR);
+            $stmt->bindValue(':description', $description ?: null, $description === '' ? PDO::PARAM_NULL : PDO::PARAM_STR);
+            $stmt->execute();
+            $_SESSION['flash_success'] = "Partenaire ajouté avec succès.";
+        } catch (PDOException $e) {
+            $_SESSION['flash_error'] = "Erreur lors de l'ajout du partenaire.";
+            error_log("Erreur ajout partenaire : " . $e->getMessage());
+        }
+    }
+    header("Location: admin.php#partenaires");
+    exit;
+}
+
+if (isset($_POST['modifier_partenaire'])) {
+    $id = (int)($_POST['partenaire_id'] ?? 0);
+    $nom = trim($_POST['nom'] ?? '');
+    $url = trim($_POST['url'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+
+    if ($id <= 0 || $nom === '' || $url === '') {
+        $_SESSION['flash_error'] = "Données invalides pour la modification.";
+    } elseif (!filter_var($url, FILTER_VALIDATE_URL)) {
+        $_SESSION['flash_error'] = "L'URL fournie n'est pas valide.";
+    } else {
+        try {
+            $stmt = $connexion->prepare("UPDATE partenaire SET nom = :nom, `url` = :url, `description` = :description WHERE id = :id");
+            $stmt->bindValue(':nom', $nom, PDO::PARAM_STR);
+            $stmt->bindValue(':url', $url, PDO::PARAM_STR);
+            $stmt->bindValue(':description', $description ?: null, $description === '' ? PDO::PARAM_NULL : PDO::PARAM_STR);
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            $_SESSION['flash_success'] = "Partenaire modifié avec succès.";
+        } catch (PDOException $e) {
+            $_SESSION['flash_error'] = "Erreur lors de la modification du partenaire.";
+            error_log("Erreur modification partenaire : " . $e->getMessage());
+        }
+    }
+    header("Location: admin.php#partenaires");
+    exit;
+}
+
+if (isset($_GET['delete_partenaire'])) {
+    $id = (int)$_GET['delete_partenaire'];
+    try {
+        $stmt = $connexion->prepare("DELETE FROM partenaire WHERE id = ?");
+        $stmt->execute([$id]);
+        $_SESSION['flash_success'] = "Partenaire supprimé.";
+    } catch (PDOException $e) {
+        $_SESSION['flash_error'] = "Erreur lors de la suppression du partenaire.";
+        error_log("Erreur suppression partenaire : " . $e->getMessage());
+    }
+    header("Location: admin.php#partenaires");
+    exit;
+}
+
 // ========== GESTION DES SERVICES ==========
 if (isset($_GET['delete_service'])) {
     $id = (int)$_GET['delete_service'];
@@ -282,6 +352,7 @@ $stmt = $connexion->prepare("SELECT prenom, nom FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['id']]);
 $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
+$partenaires = $connexion->query("SELECT * FROM partenaire ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
 $services = $connexion->query("SELECT * FROM services ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
 $commentaires = $connexion->query("SELECT * FROM commentaire ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
 $galeries = $connexion->query("SELECT g.*, s.title as service_title 
@@ -437,6 +508,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                     <?php endif; ?>
                 </button>
                 <button class="tab-button" data-tab="galeries">Galeries</button>
+                <button class="tab-button" data-tab="partenaires">Partenaires</button>
                 <button class="tab-button" data-tab="contacts">
                     Contacts
                     <?php if ($stats['contacts_nouveaux'] > 0): ?>
@@ -642,6 +714,68 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                     </div>
                 </div>
             </div>
+
+            <!-- ONGLET PARTENAIRES -->
+<div id="partenaires" class="tab-content">
+    <div class="card">
+        <h3>🤝 Gestion des partenaires (<?= count($partenaires) ?>)</h3>
+
+        <!-- Formulaire ajout -->
+        <form method="POST" class="admin-form" style="margin-bottom:16px;">
+            <h4>Ajouter un partenaire</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="part_nom">Nom *</label>
+                    <input type="text" id="part_nom" name="nom" required maxlength="150">
+                </div>
+                <div class="form-group">
+                    <label for="part_url">URL *</label>
+                    <input type="url" id="part_url" name="url" required maxlength="255" placeholder="https://example.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="part_description">Description</label>
+                <input type="text" id="part_description" name="description" maxlength="255" placeholder="Brève description (optionnel)">
+            </div>
+            <div class="form-actions">
+                <button type="submit" name="ajouter_partenaire" value="1" class="btn btn-primary">Ajouter</button>
+            </div>
+        </form>
+
+        <!-- Liste -->
+        <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>URL</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($partenaires as $p): ?>
+                            <tr>
+                                <td><?= $p['id'] ?></td>
+                                <td><strong><?= htmlspecialchars($p['nom']) ?></strong></td>
+                                <td><a href="<?= htmlspecialchars($p['url']) ?>" target="_blank" rel="noopener"><?= htmlspecialchars($p['url']) ?></a></td>
+                                <td><?= htmlspecialchars($p['description'] ?? '') ?></td>
+                                <td><?= date('d/m/Y', strtotime($p['date_creation'])) ?></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button type="button" class="btn-icon" onclick="openEditPartner(<?= $p['id'] ?>, '<?= htmlspecialchars(addslashes($p['nom'])) ?>', '<?= htmlspecialchars(addslashes($p['url'])) ?>', '<?= htmlspecialchars(addslashes($p['description'] ?? '')) ?>')">✏️</button>
+                                        <a href="?delete_partenaire=<?= $p['id'] ?>" class="btn-icon btn-delete" onclick="return confirm('Supprimer ce partenaire ?')">🗑️</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
             <!-- ONGLET CONTACTS -->
             <div id="contacts" class="tab-content">

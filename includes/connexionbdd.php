@@ -57,10 +57,16 @@
         $sql3 = "CREATE TABLE IF NOT EXISTS galeries(
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             service_id INT UNSIGNED DEFAULT NULL,
-            `filename` VARCHAR(255) NOT NULL,
+            requete_id INT UNSIGNED DEFAULT NULL, -- optionnel : lien vers requete_devis
+            filename VARCHAR(255) NOT NULL,
+            mime_type VARCHAR(100) DEFAULT NULL,
+            file_size INT UNSIGNED DEFAULT NULL,
+            image_data LONGBLOB, -- contient l'image binaire
             legende VARCHAR(255) DEFAULT NULL,
+            image_type ENUM('particulier','professionnel','domotique') NOT NULL DEFAULT 'particulier',
             date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT `fk_gallery_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE SET NULL
+            CONSTRAINT fk_gallery_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL,
+            CONSTRAINT fk_gallery_requete FOREIGN KEY (requete_id) REFERENCES requete_devis(id) ON DELETE SET NULL
         ) CHARACTER SET utf8 COLLATE utf8_bin";
         $connexion->exec($sql3);
         //contact

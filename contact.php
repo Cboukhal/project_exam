@@ -194,20 +194,32 @@ if (!empty($_POST["envoie"])) {
     }
 
     // ===== Sauvegarde en BDD =====
+    // ===== Séparation prénom / nom =====
+    $nom = trim(strip_tags($_POST['nom']));
+
+    // Séparation : 1er mot = prénom, reste = nom de famille
+    $nom_parts = preg_split('/\s+/', $nom, 2); 
+
+    $prenom = $nom_parts[0]; 
+    $nom_famille = isset($nom_parts[1]) ? $nom_parts[1] : $nom_parts[0];
+
+    // ===== Sauvegarde en BDD (table contact) =====
     try {
-        $user_id = isset($_SESSION["connexion"]) && $_SESSION["connexion"] === true ? $_SESSION["id"] : null;
-        $sql = "INSERT INTO messages (user_id, nom, email, sujet, message, date_envoi) 
-                VALUES (:user_id, :nom, :email, :sujet, :message, NOW())";
-        $stmt = $connexion->prepare($sql);
-        $stmt->bindValue(":user_id", $user_id, PDO::PARAM_INT);
-        $stmt->bindValue(":nom", $nom);
-        $stmt->bindValue(":email", $mail);
-        $stmt->bindValue(":sujet", $sujet);
-        $stmt->bindValue(":message", $message);
-        $stmt->execute();
-    } catch(PDOException $e) {
-        error_log("Erreur insertion message : " . $e->getMessage());
-    }
+            $sql = "INSERT INTO contact (prenom, nom, email, sujet, `message`) 
+                    VALUES (:prenom, :nom, :email, :sujet, :message)";
+            $stmt = $connexion->prepare($sql);
+
+            $stmt->bindValue(':prenom', $prenom, PDO::PARAM_STR);
+            $stmt->bindValue(':nom', $nom_famille, PDO::PARAM_STR);
+            $stmt->bindValue(':email', $mail, PDO::PARAM_STR);
+            $stmt->bindValue(':sujet', $sujet, PDO::PARAM_STR);
+            $stmt->bindValue(':message', $message, PDO::PARAM_STR);
+
+            $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Erreur insertion contact : " . $e->getMessage());
+            $_SESSION['flash_error'] = "Erreur lors de l'enregistrement du message.";
+        }
 
     // === Messages de feedback ===
     if ($sent_user && $sent_admin) {

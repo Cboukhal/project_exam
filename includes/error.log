@@ -21,3 +21,4 @@
 17/11/2025 10:00:15 : SQLSTATE[HY000] [1049] Base 'projet_exam' inconnue
 17/11/2025 10:14:00 : SQLSTATE[42000]: Syntax error or access violation: 1064 Erreur de syntaxe près de '-exam CHARACTER SET utf8 COLLATE utf8_bin' à la ligne 1
 17/11/2025 10:14:00 : SQLSTATE[HY000] [1049] Base 'projet_exam' inconnue
+25/11/2025 19:33:26 : SQLSTATE[42000]: Syntax error or access violation: 1072 La clé 'service_id' n'existe pas dans la table

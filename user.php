@@ -396,8 +396,8 @@ $stats = [
                     <div class="stat-icon">💬</div>
                     <div class="stat-info">
                         <div class="stat-number">
-                            <?= $stats['total_commentaires'] ?>
-                            <small>(<?= $stats['commentaires_publies'] ?> publiés)</small>
+                            
+                            <small><?= $stats['commentaires_publies'] ?> publiés</small>
                         </div>
                         <div class="stat-label">Avis laissés</div>
                     </div>
