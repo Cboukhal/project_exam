@@ -40,6 +40,113 @@ header {
   box-shadow: 0 2px 8px rgba(0, 64, 128, 0.2);
 }
 
+
+/* =============== mot de passe oublié =============== */
+
+.password-reset-container {
+            max-width: 500px;
+            margin: 80px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .password-reset-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .password-reset-header h1 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        
+        .password-reset-header p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .icon-lock {
+            font-size: 4em;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .btn-reset {
+            width: 100%;
+            padding: 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-reset:hover {
+            background: #2980b9;
+        }
+        
+        .back-to-login {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .back-to-login a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.95em;
+        }
+        
+        .back-to-login a:hover {
+            text-decoration: underline;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 0.9em;
+            color: #0d47a1;
+        }
+        
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
 /* Logo plus petit et bien centré */
 .logo {
   display: flex;
@@ -1939,3 +2046,4 @@ button:hover
 .stars-input .star.active {
     color: #ff9800;
 }
+
