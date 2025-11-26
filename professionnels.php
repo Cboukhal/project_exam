@@ -1,9 +1,23 @@
 <?php
 session_start();
-
+include_once "./includes/connexionbdd.php";
+if (!defined('UPLOAD_DIR')) {
+    define('UPLOAD_DIR', './asset/image/galerie/');
+}
 // Configuration
 define('SITE_TITLE', 'Thierry Decramp - SECIC');
+
+// Récupérer uniquement les images de type "domotique"
+try {
+    $stmt = $connexion->prepare("SELECT * FROM galeries WHERE image_type = :type ORDER BY date_creation DESC");
+    $stmt->execute([':type' => 'professionnel']);
+    $pro_images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Erreur récupération images domotique : " . $e->getMessage());
+    $pro_images = [];
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -64,7 +78,20 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
         </section>
 
         <!-- GALERIE PHOTOS -->
-        <section class="gallery" aria-label="Galerie de nos réalisations professionnelles">
+         <section class="gallery" aria-label="Galerie de nos installations domotiques">
+            <?php if (empty($pro_images)): ?>
+                <p>Aucune image domotique disponible pour le moment.</p>
+            <?php else: ?>
+                <?php foreach ($pro_images as $img): ?>
+                    <figure class="item">
+                        <img src="<?= UPLOAD_DIR . htmlspecialchars($img['filename'], ENT_QUOTES, 'UTF-8') ?>"
+                            alt="<?= htmlspecialchars($img['legende'] ?? 'Installation domotique', ENT_QUOTES, 'UTF-8') ?>"
+                            loading="lazy">
+                    </figure>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </section>
+        <!-- <section class="gallery" aria-label="Galerie de nos réalisations professionnelles">
             <figure class="item">
                 <img src="./asset/image/photos tertiaire/126 De Gaulle (11).JPG" 
                      alt="Installation électrique tertiaire complète" 
@@ -85,7 +112,7 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
                      alt="Installation électrique en milieu industriel" 
                      loading="lazy">
             </figure>
-        </section>
+        </section> -->
 
         <!-- SECTION PRÉSENTATION -->
         <section class="presentation">

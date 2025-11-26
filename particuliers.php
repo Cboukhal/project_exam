@@ -1,9 +1,23 @@
 <?php
 session_start();
-
+include_once "./includes/connexionbdd.php";
+if (!defined('UPLOAD_DIR')) {
+    define('UPLOAD_DIR', './asset/image/galerie/');
+}
 // Configuration
 define('SITE_TITLE', 'Thierry Decramp - SECIC');
+
+// Récupérer uniquement les images de type "particuliers"
+try {
+    $stmt = $connexion->prepare("SELECT * FROM galeries WHERE image_type = :type ORDER BY date_creation DESC");
+    $stmt->execute([':type' => 'particulier']);
+    $part_images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Erreur récupération images particulier : " . $e->getMessage());
+    $part_images = [];
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -65,7 +79,18 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
 
         <!-- GALERIE PHOTOS -->
         <section class="gallery" aria-label="Galerie de nos réalisations pour particuliers">
-            <figure class="item">
+            <?php if (empty($part_images)): ?>
+                <p>Aucune image domotique disponible pour le moment.</p>
+            <?php else: ?>
+                <?php foreach ($part_images as $img): ?>
+                    <figure class="item">
+                        <img src="<?= UPLOAD_DIR . htmlspecialchars($img['filename'], ENT_QUOTES, 'UTF-8') ?>"
+                            alt="<?= htmlspecialchars($img['legende'] ?? 'Installation domotique', ENT_QUOTES, 'UTF-8') ?>"
+                            loading="lazy">
+                    </figure>
+                <?php endforeach; ?>
+            <?php endif; ?>
+            <!-- <figure class="item">
                 <img src="./asset/image/particuliers/20140307_171332.jpg" 
                      alt="Installation électrique résidentielle" 
                      loading="lazy">
@@ -104,7 +129,7 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
                 <img src="./asset/image/particuliers/P_20180417_121552.jpg" 
                      alt="Système de sécurité électrique" 
                      loading="lazy">
-            </figure>
+            </figure> -->
         </section>
 
         <!-- SECTION PRÉSENTATION -->

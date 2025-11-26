@@ -1,9 +1,23 @@
 <?php
 session_start();
-
+include_once "./includes/connexionbdd.php";
+if (!defined('UPLOAD_DIR')) {
+    define('UPLOAD_DIR', './asset/image/galerie/');
+}
 // Configuration
 define('SITE_TITLE', 'Thierry Decramp - SECIC');
+
+// Récupérer uniquement les images de type "domotique"
+try {
+    $stmt = $connexion->prepare("SELECT * FROM galeries WHERE image_type = :type ORDER BY date_creation DESC");
+    $stmt->execute([':type' => 'domotique']);
+    $domo_images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("Erreur récupération images domotique : " . $e->getMessage());
+    $domo_images = [];
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -65,6 +79,19 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
 
         <!-- GALERIE PHOTOS -->
         <section class="gallery" aria-label="Galerie de nos installations domotiques">
+            <?php if (empty($domo_images)): ?>
+                <p>Aucune image domotique disponible pour le moment.</p>
+            <?php else: ?>
+                <?php foreach ($domo_images as $img): ?>
+                    <figure class="item">
+                        <img src="<?= UPLOAD_DIR . htmlspecialchars($img['filename'], ENT_QUOTES, 'UTF-8') ?>"
+                            alt="<?= htmlspecialchars($img['legende'] ?? 'Installation domotique', ENT_QUOTES, 'UTF-8') ?>"
+                            loading="lazy">
+                    </figure>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </section>
+        <!-- <section class="gallery" aria-label="Galerie de nos installations domotiques">
             <figure class="item">
                 <img src="./asset/image/domotique/20151204_175036.jpg" 
                      alt="Centrale domotique avec écran de contrôle tactile" 
@@ -90,7 +117,7 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
                      alt="Système Tebis pour automatisation complète de la maison" 
                      loading="lazy">
             </figure>
-        </section>
+        </section> -->
 
         <!-- SECTION PRÉSENTATION -->
         <section class="presentation">

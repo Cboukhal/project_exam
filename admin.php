@@ -50,33 +50,33 @@ if (isset($_POST['ajouter_partenaire'])) {
     exit;
 }
 
-if (isset($_POST['modifier_partenaire'])) {
-    $id = (int)($_POST['partenaire_id'] ?? 0);
-    $nom = trim($_POST['nom'] ?? '');
-    $url = trim($_POST['url'] ?? '');
-    $description = trim($_POST['description'] ?? '');
+// if (isset($_POST['modifier_partenaire'])) {
+//     $id = (int)($_POST['partenaire_id'] ?? 0);
+//     $nom = trim($_POST['nom'] ?? '');
+//     $url = trim($_POST['url'] ?? '');
+//     $description = trim($_POST['description'] ?? '');
 
-    if ($id <= 0 || $nom === '' || $url === '') {
-        $_SESSION['flash_error'] = "Données invalides pour la modification.";
-    } elseif (!filter_var($url, FILTER_VALIDATE_URL)) {
-        $_SESSION['flash_error'] = "L'URL fournie n'est pas valide.";
-    } else {
-        try {
-            $stmt = $connexion->prepare("UPDATE partenaire SET nom = :nom, `url` = :url, `description` = :description WHERE id = :id");
-            $stmt->bindValue(':nom', $nom, PDO::PARAM_STR);
-            $stmt->bindValue(':url', $url, PDO::PARAM_STR);
-            $stmt->bindValue(':description', $description ?: null, $description === '' ? PDO::PARAM_NULL : PDO::PARAM_STR);
-            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-            $stmt->execute();
-            $_SESSION['flash_success'] = "Partenaire modifié avec succès.";
-        } catch (PDOException $e) {
-            $_SESSION['flash_error'] = "Erreur lors de la modification du partenaire.";
-            error_log("Erreur modification partenaire : " . $e->getMessage());
-        }
-    }
-    header("Location: admin.php#partenaires");
-    exit;
-}
+//     if ($id <= 0 || $nom === '' || $url === '') {
+//         $_SESSION['flash_error'] = "Données invalides pour la modification.";
+//     } elseif (!filter_var($url, FILTER_VALIDATE_URL)) {
+//         $_SESSION['flash_error'] = "L'URL fournie n'est pas valide.";
+//     } else {
+//         try {
+//             $stmt = $connexion->prepare("UPDATE partenaire SET nom = :nom, `url` = :url, `description` = :description WHERE id = :id");
+//             $stmt->bindValue(':nom', $nom, PDO::PARAM_STR);
+//             $stmt->bindValue(':url', $url, PDO::PARAM_STR);
+//             $stmt->bindValue(':description', $description ?: null, $description === '' ? PDO::PARAM_NULL : PDO::PARAM_STR);
+//             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+//             $stmt->execute();
+//             $_SESSION['flash_success'] = "Partenaire modifié avec succès.";
+//         } catch (PDOException $e) {
+//             $_SESSION['flash_error'] = "Erreur lors de la modification du partenaire.";
+//             error_log("Erreur modification partenaire : " . $e->getMessage());
+//         }
+//     }
+//     header("Location: admin.php#partenaires");
+//     exit;
+// }
 
 if (isset($_GET['delete_partenaire'])) {
     $id = (int)$_GET['delete_partenaire'];
@@ -192,8 +192,10 @@ if (isset($_GET['delete_comment'])) {
 
 // ========== GESTION DES GALERIES ==========
 if (isset($_POST['upload_image'])) {
-    $service_id = !empty($_POST['service_id']) ? (int)$_POST['service_id'] : null;
-    $legende = trim($_POST['legende']);
+    // retirer récupération service_id
+    $legende = trim($_POST['legende'] ?? '');
+    $image_type = in_array($_POST['image_type'] ?? '', ['particulier','professionnel','domotique']) 
+                  ? $_POST['image_type'] : 'particulier';
     
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
@@ -202,11 +204,9 @@ if (isset($_POST['upload_image'])) {
         
         if (!in_array($file_type, $allowed_types)) {
             $_SESSION['flash_error'] = "Type de fichier non autorisé. Utilisez JPG, PNG ou WebP.";
-        }
-        elseif ($file_size > MAX_FILE_SIZE) {
+        } elseif ($file_size > MAX_FILE_SIZE) {
             $_SESSION['flash_error'] = "Fichier trop volumineux (max 5 MB).";
-        }
-        else {
+        } else {
             $extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
             $filename = uniqid('img_', true) . '.' . strtolower($extension);
             
@@ -216,9 +216,15 @@ if (isset($_POST['upload_image'])) {
             
             if (move_uploaded_file($_FILES['image']['tmp_name'], UPLOAD_DIR . $filename)) {
                 try {
-                    $stmt = $connexion->prepare("INSERT INTO galeries (service_id, filename, legende) 
-                                                 VALUES (?, ?, ?)");
-                    $stmt->execute([$service_id, $filename, $legende]);
+                    // insertion : filename, legende, image_type, mime_type, file_size
+                    $stmt = $connexion->prepare("INSERT INTO galeries (filename, mime_type, file_size, legende, image_type) 
+                                                 VALUES (:filename, :mime_type, :file_size, :legende, :image_type)");
+                    $stmt->bindValue(':filename', $filename, PDO::PARAM_STR);
+                    $stmt->bindValue(':mime_type', $file_type, PDO::PARAM_STR);
+                    $stmt->bindValue(':file_size', $file_size, PDO::PARAM_INT);
+                    $stmt->bindValue(':legende', $legende ?: null, $legende === '' ? PDO::PARAM_NULL : PDO::PARAM_STR);
+                    $stmt->bindValue(':image_type', $image_type, PDO::PARAM_STR);
+                    $stmt->execute();
                     $_SESSION['flash_success'] = "Image uploadée avec succès.";
                 } catch(PDOException $e) {
                     $_SESSION['flash_error'] = "Erreur lors de l'enregistrement.";
@@ -355,10 +361,7 @@ $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 $partenaires = $connexion->query("SELECT * FROM partenaire ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
 $services = $connexion->query("SELECT * FROM services ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
 $commentaires = $connexion->query("SELECT * FROM commentaire ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
-$galeries = $connexion->query("SELECT g.*, s.title as service_title 
-                               FROM galeries g 
-                               LEFT JOIN services s ON g.service_id = s.id 
-                               ORDER BY g.date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
+$galeries = $connexion->query("SELECT * FROM galeries ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
 $contacts = $connexion->query("SELECT * FROM contact ORDER BY date_creation DESC LIMIT 50")->fetchAll(PDO::FETCH_ASSOC);
 $devis = $connexion->query("SELECT * FROM requete_devis ORDER BY date_creation DESC LIMIT 50")->fetchAll(PDO::FETCH_ASSOC);
 $users = $connexion->query("SELECT * FROM users ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
@@ -528,7 +531,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <div id="dashboard" class="tab-content active">
                 <div class="dashboard-grid">
                     <div class="card">
-                        <h3>📊 Activité récente</h3>
+                        <h3>Activité récente</h3>
                         <div class="activity-list">
                             <?php
                             $recent_comments = $connexion->query("SELECT pseudo, DATE_FORMAT(date_creation, '%d/%m/%Y %H:%i') as date FROM commentaire ORDER BY date_creation DESC LIMIT 5")->fetchAll();
@@ -545,7 +548,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                     </div>
                     
                     <div class="card">
-                        <h3>🔔 Notifications</h3>
+                        <h3>Notifications</h3>
                         <div class="notification-list">
                             <?php if ($stats['commentaires_attente'] > 0): ?>
                                 <div class="notification-item warning">
@@ -582,7 +585,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <!-- ONGLET COMMENTAIRES -->
             <div id="commentaires" class="tab-content">
                 <div class="card">
-                    <h3>💬 Gestion des commentaires (<?= count($commentaires) ?>)</h3>
+                    <h3>Gestion des commentaires (<?= count($commentaires) ?>)</h3>
                     <div class="table-responsive">
                         <table class="admin-table">
                             <thead>
@@ -656,7 +659,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <!-- ONGLET GALERIES -->
             <div id="galeries" class="tab-content">
                 <div class="card">
-                    <h3>📤 Uploader une nouvelle image</h3>
+                    <h3>Uploader une nouvelle image</h3>
                     <form method="POST" enctype="multipart/form-data" class="admin-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -665,14 +668,11 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                             </div>
                             
                             <div class="form-group">
-                                <label for="service_id_img">Service associé (optionnel)</label>
-                                <select id="service_id_img" name="service_id">
-                                    <option value="">Aucun service</option>
-                                    <?php foreach ($services as $service): ?>
-                                        <option value="<?= $service['id'] ?>">
-                                            <?= htmlspecialchars($service['title']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                                <label for="image_type">Type d'image *</label>
+                                <select id="image_type" name="image_type" required>
+                                    <option value="particulier">Particulier</option>
+                                    <option value="professionnel">Professionnel</option>
+                                    <option value="domotique">Domotique</option>
                                 </select>
                             </div>
                         </div>
@@ -689,7 +689,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                 </div>
 
                 <div class="card">
-                    <h3>🖼️ Galerie d'images (<?= count($galeries) ?>)</h3>
+                    <h3>Galerie d'images (<?= count($galeries) ?>)</h3>
                     <div class="gallery-grid">
                         <?php foreach ($galeries as $img): ?>
                         <div class="gallery-item">
@@ -698,9 +698,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                             <div class="gallery-overlay">
                                 <div class="gallery-info">
                                     <strong><?= htmlspecialchars($img['legende'] ?? 'Sans légende') ?></strong>
-                                    <?php if ($img['service_title']): ?>
-                                        <br><small>📋 <?= htmlspecialchars($img['service_title']) ?></small>
-                                    <?php endif; ?>
+                                    <br><small>🔖 <?= htmlspecialchars(ucfirst($img['image_type'] ?? 'particulier')) ?></small>
                                     <br><small>📅 <?= date('d/m/Y', strtotime($img['date_creation'])) ?></small>
                                 </div>
                             </div>
@@ -718,7 +716,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <!-- ONGLET PARTENAIRES -->
 <div id="partenaires" class="tab-content">
     <div class="card">
-        <h3>🤝 Gestion des partenaires (<?= count($partenaires) ?>)</h3>
+        <h3>Gestion des partenaires (<?= count($partenaires) ?>)</h3>
 
         <!-- Formulaire ajout -->
         <form method="POST" class="admin-form" style="margin-bottom:16px;">
@@ -765,7 +763,6 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                                 <td><?= date('d/m/Y', strtotime($p['date_creation'])) ?></td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button type="button" class="btn-icon" onclick="openEditPartner(<?= $p['id'] ?>, '<?= htmlspecialchars(addslashes($p['nom'])) ?>', '<?= htmlspecialchars(addslashes($p['url'])) ?>', '<?= htmlspecialchars(addslashes($p['description'] ?? '')) ?>')">✏️</button>
                                         <a href="?delete_partenaire=<?= $p['id'] ?>" class="btn-icon btn-delete" onclick="return confirm('Supprimer ce partenaire ?')">🗑️</a>
                                     </div>
                                 </td>
@@ -780,7 +777,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <!-- ONGLET CONTACTS -->
             <div id="contacts" class="tab-content">
                 <div class="card">
-                    <h3>📧 Messages de contact (<?= count($contacts) ?>)</h3>
+                    <h3>Messages de contact (<?= count($contacts) ?>)</h3>
                     <div class="table-responsive">
                         <table class="admin-table">
                             <thead>
@@ -833,7 +830,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <!-- ONGLET DEVIS -->
             <div id="devis" class="tab-content">
                 <div class="card">
-                    <h3>📄 Demandes de devis (<?= count($devis) ?>)</h3>
+                    <h3>Demandes de devis (<?= count($devis) ?>)</h3>
                     <div class="table-responsive">
                         <table class="admin-table">
                             <thead>
@@ -890,7 +887,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <!-- ONGLET UTILISATEURS -->
             <div id="utilisateurs" class="tab-content">
                 <div class="card">
-                    <h3>👥 Liste des utilisateurs (<?= count($users) ?>)</h3>
+                    <h3>Liste des utilisateurs (<?= count($users) ?>)</h3>
                     <div class="table-responsive">
                         <table class="admin-table">
                             <thead>

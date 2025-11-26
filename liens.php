@@ -1,9 +1,19 @@
 <?php
 session_start();
-
+include_once "./includes/connexionbdd.php";
 // Configuration
 define('SITE_TITLE', 'Thierry Decramp - SECIC');
+
+// Récupérer les partenaires depuis la BDD
+$partenaires = [];
+try {
+    $partenaires = $connexion->query("SELECT * FROM partenaire ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    error_log("Erreur récupération partenaires : " . $e->getMessage());
+}
 ?>
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -67,7 +77,37 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
         <section class="prestations" id="organismes">
             <h2>Organismes professionnels et certifications</h2>
 
-            <article class="prestation">
+            <?php if (empty($partenaires)): ?>
+                <p>Aucun partenaire trouvé pour le moment.</p>
+            <?php else: ?>
+                <?php foreach ($partenaires as $p): ?>
+                    <article class="prestation">
+                        <h4>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                            <?= htmlspecialchars($p['nom'], ENT_QUOTES, 'UTF-8') ?>
+                        </h4>
+
+                        <p>
+                            <?= nl2br(htmlspecialchars($p['description'] ?? '', ENT_QUOTES, 'UTF-8')) ?>
+                        </p>
+
+                        <a href="<?= htmlspecialchars($p['url'], ENT_QUOTES, 'UTF-8') ?>"
+                        class="btn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Visiter le site de <?= htmlspecialchars($p['nom'], ENT_QUOTES, 'UTF-8') ?>">
+                            Visiter le site
+                            <span aria-hidden="true">↗</span>
+                        </a>
+                    </article>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <!----------------------------------HTML-------------------------->
+            <!-- <article class="prestation">
                 <h4>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
@@ -149,7 +189,7 @@ define('SITE_TITLE', 'Thierry Decramp - SECIC');
                     Visiter le site
                     <span aria-hidden="true">↗</span>
                 </a>
-            </article>
+            </article> -->
         </section>
 
 

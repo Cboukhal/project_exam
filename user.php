@@ -173,7 +173,7 @@ if (!empty($_POST["envoyer_devis"]))
         $message_devis = htmlspecialchars(trim($_POST["message_devis"]));
         
         // Validation
-        if (empty($type_client) || !in_array($type_client, ['Particulier', 'Professionnel'])) 
+        if (empty($type_client) || !in_array($type_client, ['Particulier', 'Professionnel', 'Domotique'])) 
             $_SESSION['flash_error'] = "Veuillez sélectionner un type de client.";
         elseif (strlen($contact_name) < 2 || strlen($contact_name) > 200) 
             $_SESSION['flash_error'] = "Le nom doit contenir entre 2 et 200 caractères.";
@@ -415,7 +415,7 @@ $stats = [
             <!-- ONGLET PROFIL -->
             <div id="profil" class="tab-content active">
                 <div class="card">
-                    <h3>📝 Modifier mes informations</h3>
+                    <h3>Modifier mes informations</h3>
                     <form method="post" action="./user.php" class="user-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -460,7 +460,7 @@ $stats = [
                 </div>
 
                 <div class="card">
-                    <h3>🔒 Changer mon mot de passe</h3>
+                    <h3>Changer mon mot de passe</h3>
                     <form method="post" action="./user.php" class="user-form">
                         <div class="form-group">
                             <label for="ancien_mdp">Ancien mot de passe *</label>
@@ -489,7 +489,7 @@ $stats = [
                 </div>
 
                 <div class="card danger-zone">
-                    <h3>⚠️ Zone dangereuse</h3>
+                    <h3>Zone dangereuse</h3>
                     <p><strong>Attention :</strong> La suppression de votre compte est définitive et irréversible.</p>
                     <button class="btn btn-danger" onclick="showDeleteModal()">
                         🗑️ Supprimer mon compte
@@ -500,7 +500,7 @@ $stats = [
             <!-- ONGLET DEMANDER UN DEVIS -->
             <div id="demander-devis" class="tab-content">
                 <div class="card">
-                    <h3>📋 Demander un devis personnalisé</h3>
+                    <h3>Demander un devis personnalisé</h3>
                     <p class="form-intro">
                         Remplissez ce formulaire pour obtenir un devis adapté à vos besoins. 
                         Notre équipe vous répondra dans les plus brefs délais.
@@ -512,8 +512,9 @@ $stats = [
                                 <label for="type_client">Type de client *</label>
                                 <select id="type_client" name="type_client" required>
                                     <option value="">-- Sélectionnez --</option>
-                                    <option value="Particulier">🏠 Particulier</option>
-                                    <option value="Professionnel">🏢 Professionnel</option>
+                                    <option value="Particulier">Particulier</option>
+                                    <option value="Professionnel">Professionnel</option>
+                                    <option value="Domotique">Domotique</option>
                                 </select>
                             </div>
                             
@@ -573,7 +574,7 @@ $stats = [
                     </form>
 
                     <div class="card">
-                    <h3>📄 Mes demandes de devis (<?= count($historique_devis) ?>)</h3>
+                    <h3>Mes demandes de devis (<?= count($historique_devis) ?>)</h3>
                     <?php if (empty($historique_devis)): ?>
                         <div class="empty-state">
                             <div class="empty-icon">📋</div>
@@ -702,7 +703,7 @@ $stats = [
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeDeleteModal()">&times;</span>
-            <h3>⚠️ Supprimer mon compte</h3>
+            <h3>Supprimer mon compte</h3>
             <p><strong>Attention :</strong> Cette action est irréversible !</p>
             <p>Toutes vos données seront définitivement supprimées :</p>
             <ul>

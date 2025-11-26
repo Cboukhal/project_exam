@@ -1,6 +1,10 @@
 <?php
 session_start();
-
+// Connexion BDD + chemin upload (ajoute si nécessaire)
+include_once "./includes/connexionbdd.php";
+if (!defined('UPLOAD_DIR')) {
+    define('UPLOAD_DIR', './asset/image/galerie/');
+}
 // Configuration
 define('SITE_TITLE', 'Thierry Decramp - SECIC');
 define('RECAPTCHA_SITE_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI');
@@ -8,6 +12,24 @@ define('RECAPTCHA_SECRET_KEY', '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe');
 
 // Définir le fuseau horaire
 date_default_timezone_set('Europe/Paris');
+
+try {
+    $stmt_part = $connexion->prepare("SELECT filename, legende FROM galeries WHERE image_type = 'particulier' ORDER BY date_creation DESC LIMIT 3");
+    $stmt_part->execute();
+    $imgs_part = $stmt_part->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt_prof = $connexion->prepare("SELECT filename, legende FROM galeries WHERE image_type = 'professionnel' ORDER BY date_creation DESC LIMIT 3");
+    $stmt_prof->execute();
+    $imgs_prof = $stmt_prof->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt_domo = $connexion->prepare("SELECT filename, legende FROM galeries WHERE image_type = 'domotique' ORDER BY date_creation DESC LIMIT 3");
+    $stmt_domo->execute();
+    $imgs_domo = $stmt_domo->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    error_log("Erreur chargement galeries : " . $e->getMessage());
+}
+
 
 // Traitement du formulaire
 if (!empty($_POST["envoie"])) {
@@ -302,10 +324,11 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error'], $_SESSION['form_data
         <!-- SECTION PARTICULIERS -->
         <section id="particuliers" class="service-section">
             <h2>Particuliers</h2>
+            
             <div class="section-content">
                 <p>Mise en conformité installation, tableaux électriques, chauffage électrique, dépannages, domotique, alarme et contrôle d'accès...</p>
                 
-                <div class="gallery">
+                <!-- <div class="gallery">
                     <figure class="item">
                         <img src="./asset/image/particuliers/20220323_182957.jpg" 
                              alt="Installation électrique résidentielle moderne"
@@ -320,8 +343,21 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error'], $_SESSION['form_data
                         <img src="./asset/image/particuliers/20140314_161634.jpg" 
                              alt="Système de chauffage électrique"
                              loading="lazy">
+                    </figure> -->
+                <!-- </div> -->
+                <div class="gallery">
+                <?php if (!empty($imgs_part)): ?>
+                    <?php foreach ($imgs_part as $img): ?>
+                    <figure class="item">
+                        <img src="<?= UPLOAD_DIR . htmlspecialchars($img['filename'], ENT_QUOTES, 'UTF-8') ?>"
+                            alt="<?= htmlspecialchars($img['legende'] ?: 'Photo installation particulier', ENT_QUOTES, 'UTF-8') ?>"
+                            loading="lazy">
                     </figure>
-                </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p>Aucune image disponible pour le moment.</p>
+                <?php endif; ?>
+            </div>
                 
                 <a href="particuliers.php" class="btn">En savoir plus</a>
             </div>
@@ -333,7 +369,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error'], $_SESSION['form_data
             <div class="section-content">
                 <p>Réalisation de travaux suivant les rapports de conformité, câblages électriques et informatiques, maintenance machines-outils, câblages pour automatismes, alimentations électriques, installations électriques dans les usines, appareils d'éclairage...</p>
                 
-                <div class="gallery">
+                <!-- <div class="gallery">
                     <figure class="item">
                         <img src="./asset/image/photos tertiaire/126 De Gaulle (11).JPG" 
                              alt="Installation électrique tertiaire professionnelle"
@@ -352,6 +388,19 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error'], $_SESSION['form_data
                              loading="lazy">
                         <figcaption>Maintenance industrielle</figcaption>
                     </figure>
+                </div> -->
+                <div class="gallery">
+                    <?php if (!empty($imgs_prof)): ?>
+                        <?php foreach ($imgs_prof as $img): ?>
+                        <figure class="item">
+                            <img src="<?= UPLOAD_DIR . htmlspecialchars($img['filename'], ENT_QUOTES, 'UTF-8') ?>"
+                                alt="<?= htmlspecialchars($img['legende'] ?: 'Photo installation professionnelle', ENT_QUOTES, 'UTF-8') ?>"
+                                loading="lazy">
+                        </figure>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p>Aucune image disponible pour le moment.</p>
+                    <?php endif; ?>
                 </div>
                 
                 <a href="professionnels.php" class="btn">En savoir plus</a>
@@ -364,7 +413,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error'], $_SESSION['form_data
             <div class="section-content">
                 <p>Réalisation complète de vos installations domotiques : programmation d'automatismes, gestion intelligente de l'énergie, intégration de capteurs et pilotage centralisé.</p>
                 
-                <div class="gallery">
+                <!-- <div class="gallery">
                     <figure class="item">
                         <img src="./asset/image/domotique/P_20171213_153435.jpg" 
                              alt="Système domotique centralisé"
@@ -383,6 +432,19 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error'], $_SESSION['form_data
                              loading="lazy">
                         <figcaption>Automatisation</figcaption>
                     </figure>
+                </div> -->
+                <div class="gallery">
+                    <?php if (!empty($imgs_domo)): ?>
+                        <?php foreach ($imgs_domo as $img): ?>
+                        <figure class="item">
+                            <img src="<?= UPLOAD_DIR . htmlspecialchars($img['filename'], ENT_QUOTES, 'UTF-8') ?>"
+                                alt="<?= htmlspecialchars($img['legende'] ?: 'Installation domotique', ENT_QUOTES, 'UTF-8') ?>"
+                                loading="lazy">
+                        </figure>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p>Aucune image disponible pour le moment.</p>
+                    <?php endif; ?>
                 </div>
                 
                 <a href="domotique.php" class="btn">En savoir plus</a>
