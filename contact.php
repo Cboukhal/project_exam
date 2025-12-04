@@ -288,7 +288,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error'], $_SESSION['form_data
                 <h1>Contact</h1>
                 <p class="hero-subtitle"><?php echo SITE_TITLE; ?> - Artisan électricien</p>
                 <p>Électricien depuis plus de 15 ans, spécialisé dans les nouvelles technologies et respectueux des normes.</p>
-                <a href="contact.php" class="btn" aria-label="Accéder à la page contact">Nous contacter</a>
+                <!-- <a href="contact.php" class="btn" aria-label="Accéder à la page contact">Nous contacter</a> -->
             </div>
 
             <!-- Navigation du carrousel -->

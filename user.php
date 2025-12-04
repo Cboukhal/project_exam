@@ -491,9 +491,16 @@ $stats = [
                 <div class="card danger-zone">
                     <h3>Zone dangereuse</h3>
                     <p><strong>Attention :</strong> La suppression de votre compte est définitive et irréversible.</p>
-                    <button class="btn btn-danger" onclick="showDeleteModal()">
+                    <!-- <button class="btn btn-danger" onclick="showDeleteModal()">
                         🗑️ Supprimer mon compte
-                    </button>
+                    </button> -->
+                    <form method="post" action="./user.php">
+                        <input type="text" name="confirmation" placeholder="Tapez SUPPRIMER" required>
+
+                        <button type="submit" name="supprimer_compte" value="1" class="btn btn-danger">
+                            Supprimer mon compte
+                        </button>
+                    </form>
                 </div>
             </div>
 

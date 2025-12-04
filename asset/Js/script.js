@@ -291,7 +291,7 @@ function editService(service) {
     const modal = document.getElementById('editServiceModal');
     
     // Remplir le formulaire
-    document.getElementById('edit_service_id').value = service.id;
+    // document.getElementById('edit_service_id').value = service.id;
     document.getElementById('edit_title').value = service.title;
     document.getElementById('edit_description').value = service.description || '';
     document.getElementById('edit_categorie').value = service.categorie;

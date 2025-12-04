@@ -127,26 +127,6 @@ if (isset($_POST['ajouter_service'])) {
     exit;
 }
 
-if (isset($_POST['modifier_service'])) {
-    $id = (int)$_POST['service_id'];
-    $title = trim($_POST['title']);
-    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', 
-            iconv('UTF-8', 'ASCII//TRANSLIT', $title))));
-    $description = trim($_POST['description']);
-    $categorie = $_POST['categorie'];
-
-    try {
-        $stmt = $connexion->prepare("UPDATE services SET title = ?, slug = ?, description = ?, categorie = ? WHERE id = ?");
-        $stmt->execute([$title, $slug, $description, $categorie, $id]);
-        $_SESSION['flash_success'] = "Service modifié avec succès.";
-    } catch(PDOException $e) {
-        $_SESSION['flash_error'] = "Erreur lors de la modification.";
-        error_log("Erreur modification service : " . $e->getMessage());
-    }
-    header("Location: admin.php#services");
-    exit;
-}
-
 // ========== GESTION DES COMMENTAIRES ==========
 if (isset($_GET['approve_comment'])) {
     $id = (int)$_GET['approve_comment'];
@@ -214,7 +194,8 @@ if (isset($_POST['upload_image'])) {
                 mkdir(UPLOAD_DIR, 0755, true);
             }
             
-            if (move_uploaded_file($_FILES['image']['tmp_name'], UPLOAD_DIR . $filename)) {
+            if (move_uploaded_file($_FILES['image']['tmp_name'], UPLOAD_DIR . $filename))
+            {
                 try {
                     // insertion : filename, legende, image_type, mime_type, file_size
                     $stmt = $connexion->prepare("INSERT INTO galeries (filename, mime_type, file_size, legende, image_type) 
@@ -359,7 +340,7 @@ $stmt->execute([$_SESSION['id']]);
 $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
 $partenaires = $connexion->query("SELECT * FROM partenaire ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
-$services = $connexion->query("SELECT * FROM services ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
+// $services = $connexion->query("SELECT * FROM services ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
 $commentaires = $connexion->query("SELECT * FROM commentaire ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
 $galeries = $connexion->query("SELECT * FROM galeries ORDER BY date_creation DESC")->fetchAll(PDO::FETCH_ASSOC);
 $contacts = $connexion->query("SELECT * FROM contact ORDER BY date_creation DESC LIMIT 50")->fetchAll(PDO::FETCH_ASSOC);
@@ -368,7 +349,7 @@ $users = $connexion->query("SELECT * FROM users ORDER BY date_creation DESC")->f
 
 // Statistiques
 $stats = [
-    'total_services' => $connexion->query("SELECT COUNT(*) FROM services")->fetchColumn(),
+    // 'total_services' => $connexion->query("SELECT COUNT(*) FROM services")->fetchColumn(),
     'total_users' => $connexion->query("SELECT COUNT(*) FROM users")->fetchColumn(),
     'total_commentaires' => $connexion->query("SELECT COUNT(*) FROM commentaire")->fetchColumn(),
     'commentaires_attente' => $connexion->query("SELECT COUNT(*) FROM commentaire WHERE approved = 0")->fetchColumn(),
@@ -436,15 +417,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <?php endif; ?>
 
             <!-- Statistiques -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">📋</div>
-                    <div class="stat-info">
-                        <div class="stat-number"><?= $stats['total_services'] ?></div>
-                        <div class="stat-label">Services</div>
-                    </div>
-                </div>
-                
+            <div class="stats-grid"> 
                 <div class="stat-card">
                     <div class="stat-icon">💬</div>
                     <div class="stat-info">
@@ -958,7 +931,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <span class="modal-close" onclick="closeEditModal()">&times;</span>
             <h3>Modifier le service</h3>
             <form method="POST" class="admin-form">
-                <input type="hidden" id="edit_service_id" name="service_id">
+                <!-- <input type="hidden" id="edit_service_id" name="service_id"> -->
                 
                 <div class="form-group">
                     <label for="edit_title">Titre *</label>

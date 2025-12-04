@@ -42,35 +42,20 @@
             date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8 COLLATE utf8_bin";
         $connexion->exec($sql);
-        //services
-        //-- Un “slug”, c’est une version simplifiée, lisible et “URL-friendly” d’un titre ou d’un nom, utilisée dans les adresses web. --
-        $sql2 = "CREATE TABLE IF NOT EXISTS services(
-            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(150) NOT NULL,
-            slug VARCHAR(150) NOT NULL UNIQUE, 
-            `description` TEXT,
-            categorie ENUM('particulier','professionnel','autre') NOT NULL DEFAULT 'particulier',
-            date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8 COLLATE utf8_bin";
-        $connexion->exec($sql2);
         //galeries
-        $sql3 = "CREATE TABLE IF NOT EXISTS galeries(
+        $sql2 = "CREATE TABLE IF NOT EXISTS galeries(
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            service_id INT UNSIGNED DEFAULT NULL,
-            requete_id INT UNSIGNED DEFAULT NULL, -- optionnel : lien vers requete_devis
             filename VARCHAR(255) NOT NULL,
             mime_type VARCHAR(100) DEFAULT NULL,
             file_size INT UNSIGNED DEFAULT NULL,
             image_data LONGBLOB, -- contient l'image binaire
             legende VARCHAR(255) DEFAULT NULL,
             image_type ENUM('particulier','professionnel','domotique') NOT NULL DEFAULT 'particulier',
-            date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT fk_gallery_service FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE SET NULL,
-            CONSTRAINT fk_gallery_requete FOREIGN KEY (requete_id) REFERENCES requete_devis(id) ON DELETE SET NULL
+            date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8 COLLATE utf8_bin";
-        $connexion->exec($sql3);
+        $connexion->exec($sql2);
         //contact
-        $sql4 = "CREATE TABLE IF NOT EXISTS contact(
+        $sql3 = "CREATE TABLE IF NOT EXISTS contact(
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             prenom VARCHAR(100) DEFAULT NULL,
             nom VARCHAR(100) DEFAULT NULL,
@@ -80,36 +65,31 @@
             `status` ENUM('new','read','closed') DEFAULT 'new',
             date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8 COLLATE utf8_bin";
-        $connexion->exec($sql4);
+        $connexion->exec($sql3);
         //commentaire
-        $sql5 = "CREATE TABLE IF NOT EXISTS commentaire(
+        $sql4 = "CREATE TABLE IF NOT EXISTS commentaire(
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             pseudo VARCHAR(100) DEFAULT 'Anonyme',
             email VARCHAR(255) DEFAULT NULL,
             note TINYINT UNSIGNED NOT NULL DEFAULT 5,
             commentaire TEXT,
-            service_id INT UNSIGNED DEFAULT NULL,
             approved TINYINT(1) DEFAULT 0,
-            approve_token VARCHAR(64) DEFAULT NULL,
-            delete_token VARCHAR(64) DEFAULT NULL,
-            token_expires DATETIME DEFAULT NULL,
-            date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT `fk_comment_service` FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON DELETE SET NULL
+            date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8 COLLATE utf8_bin";
-        $connexion->exec($sql5);
+        $connexion->exec($sql4);
         //partenaire
-        $sql6 = "CREATE TABLE IF NOT EXISTS partenaire(
+        $sql5 = "CREATE TABLE IF NOT EXISTS partenaire(
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             nom VARCHAR(150) NOT NULL,
             `url` VARCHAR(255) NOT NULL,
             `description` VARCHAR(255) DEFAULT NULL,
             date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8 COLLATE utf8_bin";
-        $connexion->exec($sql6);
+        $connexion->exec($sql5);
         //requête
-        $sql7 = "CREATE TABLE IF NOT EXISTS requete_devis(
+        $sql6 = "CREATE TABLE IF NOT EXISTS requete_devis(
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            Professionnels_Particuliers VARCHAR(200) DEFAULT NULL,
+            type_client VARCHAR(200) DEFAULT NULL,
             contact_name VARCHAR(200) DEFAULT NULL,
             email VARCHAR(255) NOT NULL,
             phone VARCHAR(50) DEFAULT NULL,
@@ -117,7 +97,7 @@
             `status` ENUM('new','in_progress','closed') DEFAULT 'new',
             date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8 COLLATE utf8_bin";
-        $connexion->exec($sql7);
+        $connexion->exec($sql6);
     }
     catch(PDOException $e){
         date_default_timezone_set("Europe/Paris");

@@ -103,7 +103,7 @@ header {
         .btn-reset {
             width: 100%;
             padding: 15px;
-            background: #3498db;
+            background: var(--primary);
             color: white;
             border: none;
             border-radius: 8px;
@@ -114,7 +114,7 @@ header {
         }
         
         .btn-reset:hover {
-            background: #2980b9;
+            background: var(--hover);
         }
         
         .back-to-login {
@@ -609,7 +609,7 @@ footer .sitemap {
 /* =============== SECTION INTRODUCTION =============== */
 .presentation {
   text-align: center;
-  background-color: #e8f0ff;
+  background-color: var(--background);
   padding: 20px;
   margin-top: 10px;
 }
@@ -1591,18 +1591,22 @@ button:hover
 .gallery-delete-btn {
     position: absolute;
     top: 10px;
-    right: 10px;
+    right: 1px;
     background: rgba(244, 67, 54, 0.9);
     color: white;
     border: none;
     border-radius: 50%;
     width: 32px;
     height: 32px;
-    font-size: 1.5rem;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    line-height: 0;
     cursor: pointer;
     transition: all 0.3s;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    /* padding-left: 50%;; */
 }
 
 .gallery-delete-btn:hover {
@@ -2137,4 +2141,140 @@ button:hover
 .temoignage-card:hover .temoignage-content{
   transform: translateY(-3px);
   background: linear-gradient(180deg, rgba(0,64,128,0.04), rgba(255,204,0,0.02));
+}
+
+/* =============== PAGES LÉGALES (CGU, Mentions légales, Politique) =============== */
+
+.legal-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 40px 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.legal-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid var(--primary);
+}
+
+.legal-header h1 {
+    color: var(--primary);
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.legal-header .update-date {
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.legal-content h2 {
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--secondary);
+}
+
+.legal-content h3 {
+    color: #333;
+    font-size: 1.3rem;
+    margin-top: 25px;
+    margin-bottom: 10px;
+}
+
+.legal-content p {
+    line-height: 1.8;
+    color: #444;
+    margin-bottom: 15px;
+    text-align: justify;
+}
+
+.legal-content ul {
+    margin: 15px 0;
+    padding-left: 30px;
+}
+
+.legal-content li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+    color: #444;
+}
+
+.info-box {
+    background: #f0f8ff;
+    border-left: 4px solid var(--primary);
+    padding: 15px 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+.info-box strong {
+    color: var(--primary);
+}
+
+.warning-box {
+    background: #fff8e1;
+    border-left: 4px solid var(--secondary);
+    padding: 15px 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+.contact-box {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 30px 0;
+    text-align: center;
+}
+
+.contact-box h3 {
+    color: var(--primary);
+    margin-bottom: 15px;
+}
+
+.back-link {
+    display: inline-block;
+    margin: 30px 0;
+    padding: 12px 30px;
+    background: var(--primary);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.back-link:hover {
+    background: var(--hover);
+}
+
+/* Responsive pages légales */
+@media (max-width: 768px) {
+    .legal-container {
+        padding: 20px 15px;
+        margin: 20px auto;
+    }
+    
+    .legal-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .legal-content h2 {
+        font-size: 1.4rem;
+    }
+    
+    .legal-content h3 {
+        font-size: 1.1rem;
+    }
+    
+    .legal-content p {
+        text-align: left;
+    }
 }
