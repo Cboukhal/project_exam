@@ -5,43 +5,57 @@ date_default_timezone_set('Europe/Paris');
 // Configuration
 define('SITE_TITLE', 'Thierry Decramp - SECIC');
 define('UPLOAD_DIR', './asset/image/galerie/');
+//??
 define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5 MB
+
+include_once "./includes/connexionbdd.php";
+include_once "./includes/fonctions.php";
+
+if (!isset($connexion))
+{
+    //??
+    die("Erreur: connexion à la BDD introuvable.");
+}
 
 // Vérifier si l'utilisateur est admin
 if (!isset($_SESSION['connexion']) || $_SESSION['connexion'] !== true || 
-    !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin')
+{
     $_SESSION['flash_error'] = "Accès réservé aux administrateurs.";
     header("Location: ./connexion.php");
     exit;
 }
 
-include_once "./includes/connexionbdd.php";
-include_once "./includes/fonctions.php";
-
-if (!isset($connexion)) {
-    die("Erreur: connexion à la BDD introuvable.");
-}
-
-// ========== GESTION DES PARTENAIRES ==========
-if (isset($_POST['ajouter_partenaire'])) {
+// ============================== GESTION DES PARTENAIRES ==============================
+if (isset($_POST['ajouter_partenaire']))
+{
     $nom = trim($_POST['nom'] ?? '');
     $url = trim($_POST['url'] ?? '');
     $description = trim($_POST['description'] ?? '');
 
     // validations simples
-    if ($nom === '' || $url === '') {
+    if ($nom === '' || $url === '')
+    {
         $_SESSION['flash_error'] = "Le nom et l'URL sont requis.";
-    } elseif (!filter_var($url, FILTER_VALIDATE_URL)) {
+    }
+    //Filter_var??
+    elseif (!filter_var($url, FILTER_VALIDATE_URL)) 
+    {
         $_SESSION['flash_error'] = "L'URL fournie n'est pas valide.";
-    } else {
-        try {
+    } 
+    else 
+    {
+        try 
+        {
             $stmt = $connexion->prepare("INSERT INTO partenaire (nom, `url`, `description`) VALUES (:nom, :url, :description)");
             $stmt->bindValue(':nom', $nom, PDO::PARAM_STR);
             $stmt->bindValue(':url', $url, PDO::PARAM_STR);
             $stmt->bindValue(':description', $description ?: null, $description === '' ? PDO::PARAM_NULL : PDO::PARAM_STR);
             $stmt->execute();
             $_SESSION['flash_success'] = "Partenaire ajouté avec succès.";
-        } catch (PDOException $e) {
+        } 
+        catch (PDOException $e) 
+        {
             $_SESSION['flash_error'] = "Erreur lors de l'ajout du partenaire.";
             error_log("Erreur ajout partenaire : " . $e->getMessage());
         }
@@ -50,41 +64,18 @@ if (isset($_POST['ajouter_partenaire'])) {
     exit;
 }
 
-// if (isset($_POST['modifier_partenaire'])) {
-//     $id = (int)($_POST['partenaire_id'] ?? 0);
-//     $nom = trim($_POST['nom'] ?? '');
-//     $url = trim($_POST['url'] ?? '');
-//     $description = trim($_POST['description'] ?? '');
-
-//     if ($id <= 0 || $nom === '' || $url === '') {
-//         $_SESSION['flash_error'] = "Données invalides pour la modification.";
-//     } elseif (!filter_var($url, FILTER_VALIDATE_URL)) {
-//         $_SESSION['flash_error'] = "L'URL fournie n'est pas valide.";
-//     } else {
-//         try {
-//             $stmt = $connexion->prepare("UPDATE partenaire SET nom = :nom, `url` = :url, `description` = :description WHERE id = :id");
-//             $stmt->bindValue(':nom', $nom, PDO::PARAM_STR);
-//             $stmt->bindValue(':url', $url, PDO::PARAM_STR);
-//             $stmt->bindValue(':description', $description ?: null, $description === '' ? PDO::PARAM_NULL : PDO::PARAM_STR);
-//             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-//             $stmt->execute();
-//             $_SESSION['flash_success'] = "Partenaire modifié avec succès.";
-//         } catch (PDOException $e) {
-//             $_SESSION['flash_error'] = "Erreur lors de la modification du partenaire.";
-//             error_log("Erreur modification partenaire : " . $e->getMessage());
-//         }
-//     }
-//     header("Location: admin.php#partenaires");
-//     exit;
-// }
-
-if (isset($_GET['delete_partenaire'])) {
+if (isset($_GET['delete_partenaire']))
+{
+    //??
     $id = (int)$_GET['delete_partenaire'];
-    try {
+    try
+    {
         $stmt = $connexion->prepare("DELETE FROM partenaire WHERE id = ?");
         $stmt->execute([$id]);
         $_SESSION['flash_success'] = "Partenaire supprimé.";
-    } catch (PDOException $e) {
+    }
+    catch (PDOException $e)
+    {
         $_SESSION['flash_error'] = "Erreur lors de la suppression du partenaire.";
         error_log("Erreur suppression partenaire : " . $e->getMessage());
     }
@@ -92,49 +83,18 @@ if (isset($_GET['delete_partenaire'])) {
     exit;
 }
 
-// ========== GESTION DES SERVICES ==========
-if (isset($_GET['delete_service'])) {
-    $id = (int)$_GET['delete_service'];
-    try {
-        $stmt = $connexion->prepare("DELETE FROM services WHERE id = ?");
-        $stmt->execute([$id]);
-        $_SESSION['flash_success'] = "Service supprimé avec succès.";
-    } catch(PDOException $e) {
-        $_SESSION['flash_error'] = "Erreur lors de la suppression.";
-        error_log("Erreur suppression service : " . $e->getMessage());
-    }
-    header("Location: admin.php#services");
-    exit;
-}
-
-if (isset($_POST['ajouter_service'])) {
-    $title = trim($_POST['title']);
-    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', 
-            iconv('UTF-8', 'ASCII//TRANSLIT', $title))));
-    $description = trim($_POST['description']);
-    $categorie = $_POST['categorie'];
-
-    try {
-        $stmt = $connexion->prepare("INSERT INTO services (title, slug, description, categorie) 
-                                     VALUES (?, ?, ?, ?)");
-        $stmt->execute([$title, $slug, $description, $categorie]);
-        $_SESSION['flash_success'] = "Service ajouté avec succès.";
-    } catch(PDOException $e) {
-        $_SESSION['flash_error'] = "Erreur lors de l'ajout du service.";
-        error_log("Erreur ajout service : " . $e->getMessage());
-    }
-    header("Location: admin.php#services");
-    exit;
-}
-
-// ========== GESTION DES COMMENTAIRES ==========
-if (isset($_GET['approve_comment'])) {
+// ============================== GESTION DES COMMENTAIRES ==============================
+if (isset($_GET['approve_comment']))
+{
     $id = (int)$_GET['approve_comment'];
-    try {
+    try
+    {
         $stmt = $connexion->prepare("UPDATE commentaire SET approved = 1 WHERE id = ?");
         $stmt->execute([$id]);
         $_SESSION['flash_success'] = "Commentaire approuvé et publié.";
-    } catch(PDOException $e) {
+    }
+    catch(PDOException $e)
+    {
         $_SESSION['flash_error'] = "Erreur lors de l'approbation.";
         error_log("Erreur approbation commentaire : " . $e->getMessage());
     }
@@ -144,11 +104,14 @@ if (isset($_GET['approve_comment'])) {
 
 if (isset($_GET['reject_comment'])) {
     $id = (int)$_GET['reject_comment'];
-    try {
+    try
+    {
         $stmt = $connexion->prepare("UPDATE commentaire SET approved = -1 WHERE id = ?");
         $stmt->execute([$id]);
         $_SESSION['flash_success'] = "Commentaire rejeté.";
-    } catch(PDOException $e) {
+    }
+    catch(PDOException $e)
+    {
         $_SESSION['flash_error'] = "Erreur lors du rejet.";
         error_log("Erreur rejet commentaire : " . $e->getMessage());
     }
@@ -156,13 +119,17 @@ if (isset($_GET['reject_comment'])) {
     exit;
 }
 
-if (isset($_GET['delete_comment'])) {
+if (isset($_GET['delete_comment']))
+{
     $id = (int)$_GET['delete_comment'];
-    try {
+    try
+    {
         $stmt = $connexion->prepare("DELETE FROM commentaire WHERE id = ?");
         $stmt->execute([$id]);
         $_SESSION['flash_success'] = "Commentaire supprimé définitivement.";
-    } catch(PDOException $e) {
+    }
+    catch(PDOException $e)
+    {
         $_SESSION['flash_error'] = "Erreur lors de la suppression.";
         error_log("Erreur suppression commentaire : " . $e->getMessage());
     }
@@ -170,33 +137,35 @@ if (isset($_GET['delete_comment'])) {
     exit;
 }
 
-// ========== GESTION DES GALERIES ==========
-if (isset($_POST['upload_image'])) {
-    // retirer récupération service_id
+// ============================== GESTION DES GALERIES ==============================
+if (isset($_POST['upload_image']))
+{
     $legende = trim($_POST['legende'] ?? '');
     $image_type = in_array($_POST['image_type'] ?? '', ['particulier','professionnel','domotique']) 
                   ? $_POST['image_type'] : 'particulier';
     
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK)
+    {
         $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
         $file_type = $_FILES['image']['type'];
         $file_size = $_FILES['image']['size'];
         
-        if (!in_array($file_type, $allowed_types)) {
+        if (!in_array($file_type, $allowed_types))
             $_SESSION['flash_error'] = "Type de fichier non autorisé. Utilisez JPG, PNG ou WebP.";
-        } elseif ($file_size > MAX_FILE_SIZE) {
+        elseif ($file_size > MAX_FILE_SIZE)
             $_SESSION['flash_error'] = "Fichier trop volumineux (max 5 MB).";
-        } else {
+        else
+        {
             $extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
             $filename = uniqid('img_', true) . '.' . strtolower($extension);
             
-            if (!is_dir(UPLOAD_DIR)) {
+            if (!is_dir(UPLOAD_DIR))
                 mkdir(UPLOAD_DIR, 0755, true);
-            }
             
             if (move_uploaded_file($_FILES['image']['tmp_name'], UPLOAD_DIR . $filename))
             {
-                try {
+                try
+                {
                     // insertion : filename, legende, image_type, mime_type, file_size
                     $stmt = $connexion->prepare("INSERT INTO galeries (filename, mime_type, file_size, legende, image_type) 
                                                  VALUES (:filename, :mime_type, :file_size, :legende, :image_type)");
@@ -207,24 +176,28 @@ if (isset($_POST['upload_image'])) {
                     $stmt->bindValue(':image_type', $image_type, PDO::PARAM_STR);
                     $stmt->execute();
                     $_SESSION['flash_success'] = "Image uploadée avec succès.";
-                } catch(PDOException $e) {
+                }
+                catch(PDOException $e)
+                {
                     $_SESSION['flash_error'] = "Erreur lors de l'enregistrement.";
                     error_log("Erreur upload image : " . $e->getMessage());
                 }
-            } else {
+            } 
+            else 
                 $_SESSION['flash_error'] = "Erreur lors de l'upload du fichier.";
-            }
         }
-    } else {
-        $_SESSION['flash_error'] = "Aucun fichier sélectionné ou erreur d'upload.";
     }
+    else
+        $_SESSION['flash_error'] = "Aucun fichier sélectionné ou erreur d'upload.";
     header("Location: admin.php#galeries");
     exit;
 }
 
-if (isset($_GET['delete_image'])) {
+if (isset($_GET['delete_image']))
+{
     $id = (int)$_GET['delete_image'];
-    try {
+    try
+    {
         $stmt = $connexion->prepare("SELECT filename FROM galeries WHERE id = ?");
         $stmt->execute([$id]);
         $image = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -239,7 +212,9 @@ if (isset($_GET['delete_image'])) {
             $stmt->execute([$id]);
             $_SESSION['flash_success'] = "Image supprimée avec succès.";
         }
-    } catch(PDOException $e) {
+    }
+    catch(PDOException $e)
+    {
         $_SESSION['flash_error'] = "Erreur lors de la suppression.";
         error_log("Erreur suppression image : " . $e->getMessage());
     }
@@ -247,8 +222,9 @@ if (isset($_GET['delete_image'])) {
     exit;
 }
 
-// ========== GESTION DES CONTACTS ==========
-if (isset($_GET['update_contact_status'])) {
+// ============================== GESTION DES CONTACTS ==============================
+if (isset($_GET['update_contact_status']))
+{
     $id = (int)$_GET['update_contact_status'];
     $status = $_GET['status'] ?? 'read';
     
@@ -888,9 +864,9 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                                     <td><?= htmlspecialchars($user['mail']) ?></td>
                                     <td>
                                         <?php if ($user['role'] == 'admin'): ?>
-                                            <span class="badge badge-danger">👑 Admin</span>
+                                            <span class="badge badge-danger">Admin</span>
                                         <?php else: ?>
-                                            <span class="badge badge-secondary">👤 User</span>
+                                            <span class="badge badge-secondary">User</span>
                                         <?php endif; ?>
                                     </td>
                                     <td><?= date('d/m/Y H:i', strtotime($user['date_creation'])) ?></td>

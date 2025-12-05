@@ -196,7 +196,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                 </div>
                 
                 <div class="info-box">
-                    <strong>ℹ️ Comment ça marche ?</strong>
+                    <strong>Comment ça marche ?</strong>
                     1. Entrez votre adresse email<br>
                     2. Recevez un lien de réinitialisation par email<br>
                     3. Créez votre nouveau mot de passe (valide 1 heure)
