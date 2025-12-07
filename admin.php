@@ -146,6 +146,7 @@ if (isset($_POST['upload_image']))
     
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK)
     {
+        //type MIME
         $allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
         $file_type = $_FILES['image']['type'];
         $file_size = $_FILES['image']['size'];
@@ -156,12 +157,15 @@ if (isset($_POST['upload_image']))
             $_SESSION['flash_error'] = "Fichier trop volumineux (max 5 MB).";
         else
         {
+            //permet d'éviter les doublons
             $extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
             $filename = uniqid('img_', true) . '.' . strtolower($extension);
             
             if (!is_dir(UPLOAD_DIR))
+                //si le dossier n'existe pas, on le crée
                 mkdir(UPLOAD_DIR, 0755, true);
-            
+
+            //L’image est déplacée du dossier temporaire vers le dossier final.
             if (move_uploaded_file($_FILES['image']['tmp_name'], UPLOAD_DIR . $filename))
             {
                 try

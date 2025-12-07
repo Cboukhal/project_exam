@@ -72,6 +72,7 @@ if (!empty($_POST["connexion"])) {
                     // Se souvenir de moi (optionnel)
                     if (!empty($_POST['remember_me'])) {
                         $token = bin2hex(random_bytes(32));
+                        //le système génère un token sécurisé, puis crée un cookie valable 30 jours.
                         setcookie('remember_token', $token, time() + (86400 * 30), "/", "", true, true); // 30 jours
                         
                         // Sauvegarder le token en BDD (à implémenter)
