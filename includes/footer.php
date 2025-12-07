@@ -11,10 +11,9 @@
     </div>
     <p>© SECIC 2025. Tous droits réservés.</p>
     <p>
-      <a href="#">RGPD</a> | 
+      <a>RGPD</a> | 
       <a href="./mentions_legales.php">Mentions légales</a> | 
       <a href="./politique_confidentialite.php">Politique de confidentialité</a> | 
-      <a href="./cgu.php">CGU</a> | 
-      <a href="#">Accessibilité</a>
+      <a href="./cgu.php">CGU</a>
     </p>
   </footer>

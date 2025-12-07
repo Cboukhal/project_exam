@@ -67,6 +67,8 @@ if (!empty($_POST["envoie"])) {
     $message = trim(strip_tags($_POST["message"]));
 
     // Validation des données
+
+    //Vérifie que le nom est ni trop court ni trop long.
     if (strlen($nom) < 2 || strlen($nom) > 100) {
         $_SESSION['flash_error'] = "Le nom doit contenir entre 2 et 100 caractères.";
         $_SESSION['form_data'] = $_POST;
@@ -74,6 +76,7 @@ if (!empty($_POST["envoie"])) {
         exit;
     }
 
+    //Vérifie que le format de l’email est valide.
     if (!filter_var($mail, FILTER_VALIDATE_EMAIL)) {
         $_SESSION['flash_error'] = "L'adresse email n'est pas valide.";
         $_SESSION['form_data'] = $_POST;
@@ -81,6 +84,7 @@ if (!empty($_POST["envoie"])) {
         exit;
     }
 
+    //Contrôle la taille du sujet.
     if (strlen($sujet) < 3 || strlen($sujet) > 200) {
         $_SESSION['flash_error'] = "Le sujet doit contenir entre 3 et 200 caractères.";
         $_SESSION['form_data'] = $_POST;
@@ -88,6 +92,7 @@ if (!empty($_POST["envoie"])) {
         exit;
     }
 
+    //S’assure que le message n’est pas trop court ou trop long.
     if (strlen($message) < 10 || strlen($message) > 1000) {
         $_SESSION['flash_error'] = "Le message doit contenir entre 10 et 1000 caractères.";
         $_SESSION['form_data'] = $_POST;
