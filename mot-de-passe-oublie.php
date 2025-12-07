@@ -179,7 +179,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <?php endif; ?>
             
             <div class="password-reset-header">
-                <div class="icon-lock">🔐</div>
+                <!-- <div class="icon-lock">🔐</div> -->
                 <h1>Mot de passe oublié ?</h1>
                 <p>Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.</p>
             </div>
@@ -196,7 +196,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                 </div>
                 
                 <div class="info-box">
-                    <strong>ℹ️ Comment ça marche ?</strong>
+                    <strong>Comment ça marche ?</strong>
                     1. Entrez votre adresse email<br>
                     2. Recevez un lien de réinitialisation par email<br>
                     3. Créez votre nouveau mot de passe (valide 1 heure)

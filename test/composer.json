@@ -1,0 +1,16 @@
+{
+    "name": "stagiaire/test",
+    "description": "test projet",
+    "autoload": {
+        "psr-4": {
+            "Stagiaire\\Test\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Cboukhal",
+            "email": "boukhalfa.camil@hotmail.fr"
+        }
+    ],
+    "require": {}
+}
