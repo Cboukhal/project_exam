@@ -100,7 +100,7 @@
                 <h1>Commentaires</h1>
                 <p>Thierry Decramp - SECIC - Artisan électricien</p>
                 <p>Électricien depuis plus de 15 ans, spécialisé dans les nouvelles technologies et respectueux des normes.</p>
-                <a href="contact.php" class="btn">Contact</a>
+                <a href="contact.php" class="btn">Nous contacter</a>
             </div>
 
             <div class="hero-dots">
