@@ -225,7 +225,7 @@ nav ul li a:hover {
   left: 0;
 }
 
-/* ✅ Fond noir semi-transparent sur toute la bannière */
+/*  Fond noir semi-transparent sur toute la bannière */
 .hero::after {
   content: "";
   position: absolute;
@@ -654,7 +654,7 @@ footer .sitemap {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center; /* ✅ centre ton h4 au milieu */
+  align-items: center; /*  centre ton h4 au milieu */
 }
 
 .prestation h4 {
@@ -663,14 +663,14 @@ footer .sitemap {
   font-size: 18px;
   border-radius: 4px;
   width: 50%;
-  text-align: center; /* ✅ centre le texte à l’intérieur */
+  text-align: center; /*  centre le texte à l’intérieur */
   padding: 5px;       /* optionnel pour un meilleur rendu */
 }
 
-/* ✅ Liste alignée à gauche */
+/*  Liste alignée à gauche */
 .prestation ul {
   margin: 10px 0 10px 40px;  /* espace à gauche */
-  text-align: left; /* ✅ force le texte à gauche */
+  text-align: left; /*  force le texte à gauche */
   list-style-position: outside; /* les puces à l'extérieur */
   list-style: none;
   width: 50%;
