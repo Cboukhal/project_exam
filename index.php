@@ -273,15 +273,15 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error'], $_SESSION['form_data
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    //définit l’encodage des caractères. Important pour que les accents et caractères spéciaux s’affichent correctement.
+    <!-- //définit l’encodage des caractères. Important pour que les accents et caractères spéciaux s’affichent correctement. -->
     <meta charset="UTF-8">
-    //rend la page responsive, adaptée aux mobiles et tablettes.
+    <!-- //rend la page responsive, adaptée aux mobiles et tablettes. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    //fournit une description concise de la page aux moteurs de recherche. Elle apparaît souvent dans les résultats Google.
+    <!-- //fournit une description concise de la page aux moteurs de recherche. Elle apparaît souvent dans les résultats Google. -->
     <meta name="description" content="Thierry Decramp - Artisan électricien à L'Isle-Adam. Plus de 15 ans d'expérience en électricité, domotique et installations professionnelles.">
-    //liste des mots-clés liés à la page. Aujourd’hui, peu utilisée pour le SEO, mais peut aider légèrement.
+    <!-- //liste des mots-clés liés à la page. Aujourd’hui, peu utilisée pour le SEO, mais peut aider légèrement. -->
     <meta name="keywords" content="électricien, domotique, installation électrique, L'Isle-Adam, Val d'Oise">
-    //indique l’auteur du site ou de la page. Pour l’information et la crédibilité.
+    <!-- //indique l’auteur du site ou de la page. Pour l’information et la crédibilité. -->
     <meta name="author" content="SECIC - Thierry Decramp">
     
     <!-- Preconnect pour optimiser le chargement des polices -->

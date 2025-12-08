@@ -325,7 +325,7 @@ function updateDevisStatus(id, status) {
 // CONFIRMATION DE SUPPRESSION
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // ✅ Éviter de ré-exécuter si déjà fait
+    // Éviter de ré-exécuter si déjà fait
     if (!window.deleteLinksInitialized) {
         window.deleteLinksInitialized = true;
         
@@ -573,6 +573,26 @@ document.addEventListener('keydown', function(e) {
         modals.forEach(modal => modal.classList.remove('show'));
     }
 });
+
+// Compteur de caractères pour les avis
+const commentaireTextarea = document.getElementById('commentaire');
+const charCount = document.getElementById('charCount');
+
+if (commentaireTextarea && charCount) {
+    commentaireTextarea.addEventListener('input', function() {
+        const count = this.value.length;
+        charCount.textContent = count;
+        
+        // Changer la couleur selon la longueur
+        if (count < 10) {
+            charCount.style.color = '#f44336'; // Rouge
+        } else if (count > 450) {
+            charCount.style.color = '#ff9800'; // Orange
+        } else {
+            charCount.style.color = '#4caf50'; // Vert
+        }
+    });
+}
 
 // Compteur de caractères pour le devis
 document.addEventListener('DOMContentLoaded', function() {
