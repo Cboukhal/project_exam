@@ -517,7 +517,6 @@ document.head.appendChild(style);
 // ============================================
 function refreshStats() {
     // Récupérer les nouvelles statistiques via AJAX
-    // À implémenter selon vos besoins
     console.log('Rafraîchissement des statistiques...');
 }
 
