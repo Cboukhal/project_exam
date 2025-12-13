@@ -135,7 +135,7 @@ if (!empty($_POST["inscription"])) {
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $_SESSION['flash_error'] = "L'adresse email n'est pas valide.";
     }
-    elseif (strlen($mdp) < 8) {
+    elseif (strlen($mdp) < 12) {
         $_SESSION['flash_error'] = "Le mot de passe doit contenir au moins 8 caractères.";
     }
     elseif ($mdp !== $confirmer_mdp) {
@@ -310,14 +310,14 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                         </div>
                         
                         <div class="form-group">
-                            <label for="mdp-inscription">Mot de passe * (min. 8 caractères)</label>
+                            <label for="mdp-inscription">Mot de passe * (min. 12 caractères)</label>
                             <input type="password" id="mdp-inscription" name="mdp" 
-                                   placeholder="••••••••" required minlength="8">
+                                   placeholder="••••••••••••" required minlength="12">
                             <div class="password-strength">
                                 <div class="password-strength-bar" id="strength-bar"></div>
                             </div>
                             <div class="password-hint" id="password-hint">
-                                Utilisez au moins 8 caractères avec majuscules, minuscules et chiffres
+                                Utilisez au moins 12 caractères avec majuscules, minuscules et chiffres
                             </div>
                         </div>
                         
@@ -374,7 +374,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                 const password = this.value;
                 let strength = 0;
                 
-                if (password.length >= 8) strength++;
+                if (password.length >= 12) strength++;
                 if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
                 if (password.match(/[0-9]/)) strength++;
                 if (password.match(/[^a-zA-Z0-9]/)) strength++;
