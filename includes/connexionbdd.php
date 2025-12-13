@@ -2,6 +2,7 @@
     $server = 'localhost';
     $username = 'root';
     $password = '';
+    // Fonction enregistre erreur dans error.log
     function log_error($msg)
     {
     $fichier = fopen("error.log", "a+");
@@ -9,12 +10,14 @@
     fclose($fichier);
     }
 
+    // creation de bdd
     try{
         $connexion = new PDO("mysql:host=$server;", $username, $password);
         $connexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $sql = "CREATE DATABASE IF NOT EXISTS projet_exam CHARACTER SET utf8 COLLATE utf8_bin";
         $connexion->exec($sql);
     }
+    // gestion des erreus, heure locale fr
     catch(PDOException $e){
         date_default_timezone_set("Europe/Paris");
         setlocale(LC_TIME, "fr_FR");
