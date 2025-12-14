@@ -636,7 +636,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                         </div>
                         
                         <button type="submit" name="upload_image" value="1" class="btn btn-primary">
-                            📤 Uploader l'image
+                            Uploader l'image
                         </button>
                     </form>
                 </div>

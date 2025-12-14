@@ -453,7 +453,7 @@ $stats = [
                         
                         <div class="form-actions">
                             <button type="submit" name="modifier_profil" value="1" class="btn btn-primary">
-                                💾 Enregistrer les modifications
+                                Enregistrer les modifications
                             </button>
                         </div>
                     </form>
@@ -482,7 +482,7 @@ $stats = [
                         
                         <div class="form-actions">
                             <button type="submit" name="changer_mdp" value="1" class="btn btn-primary">
-                                🔐 Changer le mot de passe
+                                Changer le mot de passe
                             </button>
                         </div>
                     </form>
@@ -492,7 +492,7 @@ $stats = [
                     <h3>Zone dangereuse</h3>
                     <p><strong>Attention :</strong> La suppression de votre compte est définitive et irréversible.</p>
                     <!-- <button class="btn btn-danger" onclick="showDeleteModal()">
-                        🗑️ Supprimer mon compte
+                        Supprimer mon compte
                     </button> -->
                     <form method="post" action="./user.php">
                         <input type="text" name="confirmation" placeholder="Tapez SUPPRIMER" required>
@@ -575,7 +575,7 @@ $stats = [
                 
                         <div class="form-actions">
                             <button type="submit" name="envoyer_devis" value="1" class="btn btn-primary">
-                                📤 Envoyer ma demande
+                                Envoyer ma demande
                             </button>
                         </div>
                     </form>
@@ -584,7 +584,7 @@ $stats = [
                     <h3>Mes demandes de devis (<?= count($historique_devis) ?>)</h3>
                     <?php if (empty($historique_devis)): ?>
                         <div class="empty-state">
-                            <div class="empty-icon">📋</div>
+                            <div class="empty-icon"></div>
                             <p>Aucune demande de devis pour le moment</p>
                         </div>
                     <?php else: ?>
