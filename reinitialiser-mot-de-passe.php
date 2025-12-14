@@ -384,7 +384,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
     
     <script src="./asset/Js/jquery-3.7.1.min.js"></script>
     <script src="./asset/Js/script.js"></script>
-    <script>
+    <!-- <script>
         // Indicateur de force du mot de passe
         const mdpInput = document.getElementById('nouveau_mdp');
         const strengthBar = document.getElementById('strength-bar');
@@ -432,6 +432,6 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                 }
             });
         }
-    </script>
+    </script> -->
 </body>
 </html>

@@ -327,7 +327,7 @@ $stats = [
     <!-- Styles principaux -->
     <link rel="stylesheet" href="./asset/css/style2.css">
     <!-- Styles user -->
-    <link rel="stylesheet" href="./asset/css/user.css">
+    <!-- <link rel="stylesheet" href="./asset/css/user.css"> -->
     
     <link rel="icon" type="image/webp" href="./asset/image/OIP.webp">
     
@@ -445,7 +445,7 @@ $stats = [
                             
                             <div class="form-group">
                                 <label for="email">Email *</label>
-                                <input type="email" id="email" name="email" 
+                                <input type="email" id="profil_email" name="email" 
                                        value="<?= htmlspecialchars($user['mail']) ?>" 
                                        required>
                             </div>
@@ -670,7 +670,7 @@ $stats = [
             <div id="nouveau-avis" class="tab-content">
                 <div class="card">
                     <h3>Laisser un avis sur nos services</h3>
-                    <form method="post" action="./user.php" class="user-form">
+                    <form id="commentForm" method="post" action="./user.php" class="user-form">
                         <div class="form-group">
                             <label>Votre note *</label>
                             <div class="stars-container">
@@ -695,7 +695,7 @@ $stats = [
                                 Caractères : <span id="charCount">0</span> / 500
                             </div>
                         </div>    
-                        <div class="form-actions" id="commentForm">
+                        <div class="form-actions">
                             <button type="submit" name="envoyer_commentaire" value="1" class="btn btn-primary">
                                 Publier mon avis
                             </button>
@@ -740,6 +740,5 @@ $stats = [
 
     <script src="./asset/Js/jquery-3.7.1.min.js"></script>
     <script src="./asset/Js/script.js"></script>
-    <script src="./asset/Js/admin.js"></script>
 </body>
 </html>
