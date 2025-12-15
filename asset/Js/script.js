@@ -57,8 +57,7 @@ document.addEventListener('DOMContentLoaded', function()
 // 2. SLIDER
 // ============================================
 
-function initSlider()
-    {
+function initSlider(){
     let images = $('#slider img');
     let dots = $('.dot');
     let nbrSlides = images.length;
@@ -309,7 +308,7 @@ function switchTab(tabName)
     });
 
     // Activer l'onglet sélectionné
-    const button = document.querySelector(`[data-tab="$    {tabName}"]`);
+    const button = document.querySelector(`[data-tab="${tabName}"]`);
     const content = document.getElementById(tabName);
 
     if (button && content)
@@ -570,9 +569,7 @@ function initPasswordStrength()
 function initPasswordConfirmation()
     {
     // Support pour plusieurs IDs (inscription + réinitialisation)
-    const passwordPairs = [
-       
-    {
+    const passwordPairs = [{
             password: document.getElementById('mdp-inscription'),
             confirm: document.getElementById('confirmer-mdp')
         },
